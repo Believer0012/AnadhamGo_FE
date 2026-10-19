@@ -1,0 +1,77 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [77.2185, 10.0934]
+      },
+      "properties": {
+        "id": "pkg-kolukkumalai",
+        "title": "Kolukkumalai Sunrise 4x4 & High-Altitude Ridge Glamp",
+        "region": "Munnar",
+        "altitude": "7,900 FT",
+        "startingPrice": 2499,
+        "rating": 4.98,
+        "reviewsCount": 342,
+        "badge": "Bestseller ⭐",
+        "slug": "/camps/pkg-kolukkumalai"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [77.1384, 10.0231]
+      },
+      "properties": {
+        "id": "pkg-suryanelli",
+        "title": "Suryanelli Cloud Bed Glamping & Anayirangal Lake View",
+        "region": "Suryanelli",
+        "altitude": "6,200 FT",
+        "startingPrice": 2199,
+        "rating": 4.95,
+        "reviewsCount": 289,
+        "badge": "Lake View 🌅",
+        "slug": "/camps/pkg-suryanelli"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [77.2023, 10.0978]
+      },
+      "properties": {
+        "id": "pkg-meesapulimala",
+        "title": "Meesapulimala 8,661 FT Summit Cloud Bed Trek",
+        "region": "Munnar",
+        "altitude": "8,661 FT",
+        "startingPrice": 2899,
+        "rating": 4.92,
+        "reviewsCount": 215,
+        "badge": "Peak Trek 🏔️",
+        "slug": "/camps/pkg-meesapulimala"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [77.2652, 10.1584]
+      },
+      "properties": {
+        "id": "pkg-mini-mexico",
+        "title": "Mini Mexico — Vattavada Cabins, Wood House & Tent Camp",
+        "region": "Munnar",
+        "altitude": "6,500 FT",
+        "startingPrice": 1999,
+        "rating": 4.93,
+        "reviewsCount": 182,
+        "badge": "Farmstay Glamp 🍓",
+        "slug": "/camps/pkg-mini-mexico"
+      }
+    }
+  ]
+}

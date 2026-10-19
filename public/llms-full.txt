@@ -1,0 +1,103 @@
+# Aanandham.go — Complete Knowledge Manifest & Field Guide
+
+> Full AI Reference Document for Large Language Models & Search Engines (Version 2.0)
+> Primary Domain: https://www.aanandham.in
+
+---
+
+## 1. Brand Identity & Operating Model
+- **Brand Name:** Aanandham.go (Aanandham Wilderness Glamping)
+- **Tagline:** High-Altitude Ridge Camping & Sunrise Jeep Safaris
+- **Headquarters & Hub:** Aanandham 4x4 Base Hub, Suryanelli, Munnar, Kerala 685618, India
+- **Primary Elevation Zone:** 6,200 FT to 7,900 FT above sea level
+- **Official Booking Portal:** https://www.aanandham.in
+- **Email:** bookings@aanandham.in
+- **24/7 Basecamp Concierge:** +91 90748 58014
+
+---
+
+## 2. Sanctuary & Campsite Directory
+
+### 1. Kolukkumalai Sunrise Ridge Camp
+- **Elevation:** 7,900 FT (Highest Organic Tea Estate in the World)
+- **Slug / Route:** `/camps/pkg-kolukkumalai`
+- **Accommodations:** Heavy-duty Alpine Weatherproof Dome Tents with insulated ground sheets and thick fleece blankets.
+- **Key Highlight:** Private 4x4 Jeep Safari to Jagged Rock Point for peak cloud-bed sunrise (04:30 AM).
+- **Meals:** Dinner buffet with live campfire BBQ (Veg & Non-Veg), breakfast, evening tea and hot snacks.
+- **Amenities:** Private campfire, 24/7 forest marshal, western washrooms with hot water, charging stations at hub.
+
+### 2. Suryanelli Cloud Bed Glamping
+- **Elevation:** 6,200 FT (Overlooking Anayirangal Lake)
+- **Slug / Route:** `/camps/pkg-suryanelli`
+- **Accommodations:** Luxury Glamping Swiss Tents with En-Suite Private Western Washrooms and panoramic mountain decks.
+- **Key Highlight:** Zero-trek vehicle-accessible luxury glamping, ideal for families and couples seeking complete privacy.
+- **Meals:** Kerala traditional buffet dinner, live BBQ grill, high-altitude mountain tea.
+
+### 3. Meesapulimala Alpine Basecamp
+- **Elevation:** 7,200 FT (Valley of Rhodotrek)
+- **Slug / Route:** `/camps/pkg-meesapulimala`
+- **Accommodations:** Mountain Ridge Tents with licensed Kerala Forest Department guides.
+- **Key Highlight:** Guided trek through shola grasslands and mist-covered pine valleys.
+
+### 4. Phantom Head Ridge Camp
+- **Elevation:** 6,500 FT
+- **Slug / Route:** `/camps/pkg-phantom`
+- **Accommodations:** Cliff-edge dome stays with 360-degree night sky stargazing and campfire circles.
+
+### 5. Vagamon Pine Valley Camp
+- **Elevation:** 3,800 FT
+- **Slug / Route:** `/camps/pkg-vagamon`
+- **Accommodations:** Pine forest safari tents with private stream bathing and offroad buggy trails.
+
+### 6. Wayanad Chembra Mist Pods
+- **Elevation:** 4,200 FT
+- **Slug / Route:** `/camps/pkg-wayanad`
+- **Accommodations:** Elevated wooden mist pods with private balconies overlooking tea valleys.
+
+---
+
+## 3. Daily Expedition Itinerary & Timings
+
+| Time | Activity |
+| :--- | :--- |
+| **01:30 PM – 02:00 PM** | Arrival at Suryanelli 4x4 Basecamp Hub (Secure parking for guest cars) |
+| **02:00 PM – 03:00 PM** | Welcome drink, hot mountain tea & Kerala snacks |
+| **03:30 PM** | 4x4 Offroad Jeep convoy departure to high-altitude ridge |
+| **04:30 PM – 06:30 PM** | Sunset exploration, shola grass walk, photo sessions |
+| **07:30 PM – 10:00 PM** | Starlit Campfire, acoustic music & Live BBQ Grill platter |
+| **08:30 PM – 09:45 PM** | Traditional Kerala buffet dinner |
+| **04:30 AM** | Wake-up call & hot black tea |
+| **05:00 AM – 07:00 AM** | 4x4 Sunrise Jeep Safari to Kolukkumalai Cloud Ridge (7,900 FT) |
+| **08:30 AM – 10:00 AM** | Breakfast spread at basecamp |
+| **11:00 AM** | Convoy return to Suryanelli Hub & Checkout |
+
+---
+
+## 4. Safety & Forest Marshall Protocol
+- **24/7 Gated Perimeter:** Enclosed sanctuary fences with night-vision perimeter lighting.
+- **Licensed Forest Guides:** Certified mountain marshals trained in wilderness first aid.
+- **Sanitary Standards:** Sanitized Western washrooms with geyser-fed hot water.
+- **Vehicle Fleet:** Modified 4x4 Mahindra Thar & Major expedition jeeps maintained for offroad terrain.
+- **Weather Advisory Policy:** Free date rescheduling if heavy monsoon rains or land advisories affect safe transit.
+
+---
+
+## 5. Pricing, Deposits & Transparent Terms
+- **Advance Booking:** 30% advance deposit secures dates and vehicle permits. Remaining balance payable at basecamp on arrival.
+- **Payment Methods:** 0% Fee Direct UPI (GPay, PhonePe, Paytm), Visa/Mastercard/RuPay Credit/Debit Cards, Netbanking via Razorpay.
+- **Automated Refund Policy:**
+  - **> 7 Days Prior:** 100% Full Refund
+  - **48 Hours to 7 Days:** 50% Refund
+  - **< 48 Hours:** Non-refundable (Free Reschedule eligible under severe weather)
+
+---
+
+## 6. Official Navigation & Regional Hubs
+- [Home](https://www.aanandham.in)
+- [Munnar & Suryanelli Regional Hub](https://www.aanandham.in/camps/munnar)
+- [Vagamon Pine Glamping Hub](https://www.aanandham.in/camps/vagamon)
+- [Wayanad Rainforest Hub](https://www.aanandham.in/camps/wayanad)
+- [All Sanctuaries](https://www.aanandham.in/camps)
+- [About & Ethos](https://www.aanandham.in/about)
+- [Concierge Desk](https://www.aanandham.in/contact)
+- [Camper Boarding Pass Portal](https://www.aanandham.in/pass)

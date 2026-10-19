@@ -1,0 +1,31 @@
+<!-- Camp detail page — DESKTOP redesign reference (visual + behaviour spec only).
+     Canvas format (<x-dc>, <sc-for>, {{holes}}); read inline styles for values and
+     the renderVals() script for price logic. Do NOT copy this format into the app.
+     Booking card: sticky right column; 3 inline steps (weekend / tent / campers);
+     "Reserve" keeps the existing submit behaviour. Prices per person, GST 12% inclusive. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Camp detail — desktop</title>
+</head>
+<body>
+<!-- Tokens: bg #F4F6F0 · surface #FFF · ink #121613 · ink-soft #3A443E · muted #4F5B53
+     · border rgba(18,22,19,0.14) · brand #166534 · brand-tint #F1F7F2 · brand-soft #E6EDE3
+     · lime #D5ED55 (dark surfaces only) · cta #E5A93B (text #1A1305) · dark #0B150E
+     Fonts: Bricolage Grotesque (headings 600/700/800), Instrument Sans (body 400–700)
+     Layout: header 72px; two-col grid minmax(0,1fr) 392px, gap 48, page padding 64;
+     booking card position:sticky top:24. Left: badges, H1 40/800/-0.02em, meta row,
+     gallery 2fr/1fr two 170px rows radius 20 + "All N photos" pill, section tabs
+     (Overview/Stays/Itinerary/Amenities/Good to know, active = 3px green underline),
+     Overview card + 4-col quick facts, Stays selectable rows (shared state w/ card),
+     Itinerary Day1/Day2 dot-list, What's included 3-col icon tiles, Book-with-confidence
+     dark panel (lime heading + ✓ list). Footer strip.
+     Booking card: price header + "Open for booking" pill; Step1 weekend chips (3-col,
+     real dates); Step2 tent radios; Step3 camper stepper (helper "N tents · {tent}");
+     price breakdown (₹price × N, GST(12%) included, Total 24px, Due today ₹0);
+     amber Reserve 56px "Reserve {dates} →" + "You won't be charged now · Pay at the camp";
+     help card (WhatsApp). See the canvas artifact for the full pixel spec. -->
+<p>See the full desktop reference in the Camp Detail Redesign canvas artifact and the pasted spec. Kept here as an untracked design record.</p>
+</body>
+</html>

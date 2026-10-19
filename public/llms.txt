@@ -1,0 +1,68 @@
+# Aanandham.go — Discover Pulga, Kasol & the Parvati Valley
+
+> Official AI & LLM Knowledge Manifest for Aanandham.go (Himachal Pradesh & Kerala, India)
+
+Aanandham.go is a mountain travel platform for discovering and planning trips in the Parvati Valley, Himachal Pradesh — Pulga, Kasol, Kalga, Tosh, Kheerganga, Manikaran and Malana — with destination guides, treks and mountain stays. Stays in the Parvati Valley are being added; the destination pages list only stays that are live. Aanandham.go also runs verified camps in Munnar, Kerala (details below).
+
+- **Website:** https://www.aanandham.in
+- **Concierge:** +91 90748 58014 | bookings@aanandham.in
+- **Instagram:** @aanandham.go (https://instagram.com/aanandham.go)
+
+## Parvati Valley Destinations (Himachal Pradesh)
+- [Pulga](https://www.aanandham.in/destinations/pulga): Car-free village of wooden houses beside an old deodar forest, a short walk from Barshaini (~2,200 m).
+- [Kasol](https://www.aanandham.in/destinations/kasol): Riverside town on the Parvati; the usual base for the valley (~1,580 m).
+- [Kalga](https://www.aanandham.in/destinations/kalga): Orchards and meadows above Barshaini (~2,250 m).
+- [Tosh](https://www.aanandham.in/destinations/tosh): Village at the head of the Tosh valley (~2,400 m).
+- [Kheerganga](https://www.aanandham.in/destinations/kheerganga): High meadow with a natural hot spring, ~12 km trek from near Barshaini (~2,950 m).
+- [Manikaran](https://www.aanandham.in/destinations/manikaran): Pilgrim town with hot springs, gurudwara and temples (~1,760 m).
+- [Malana](https://www.aanandham.in/destinations/malana): Ancient self-governing village; visitors must not touch walls, temples or residents (~2,650 m).
+- [Parvati Valley overview](https://www.aanandham.in/destinations/parvati-valley) · [All destinations](https://www.aanandham.in/destinations)
+
+## Munnar, Kerala — Camps Open for Booking
+- **Location:** Suryanelli & Kolukkumalai Ridge, Munnar, Kerala 685618, India
+- **Coordinates:** 10.0889° N, 77.0595° E
+
+## Key Sanctuaries & Campsites (Munnar region)
+- **Kolukkumalai Sunrise Ridge Camp (7,900 FT):** Highest tea estate camping with private 4x4 peak sunrise safari to Jagged Rock.
+- **Suryanelli Cloud Bed Glamping (6,200 FT):** Luxury alpine dome tents with en-suite washrooms overlooking the Anayirangal Dam valley.
+- **Meesapulimala Alpine Basecamp (7,200 FT):** High-altitude rhododendron valley trek camp with licensed forest guides.
+- **Phantom Head Ridge Camp (6,500 FT):** 360-degree panoramic cliff glamping with starlit campfire and live BBQ.
+- **Vagamon Pine Valley Camp (3,800 FT):** Pine forest glamping with offroad jeep trails and private stream hikes.
+- **Wayanad Chembra Mist Pods (4,200 FT):** Cloud-level wooden ridge pods overlooking tea plantations.
+
+## Standard Inclusions in Every Expedition
+1. High-altitude weatherproof alpine dome tent or luxury glamping suite
+2. Dinner (Buffet Kerala meals + Live campfire BBQ platter with Veg & Non-Veg options)
+3. Plantation breakfast & hot mountain tea/coffee
+4. Evening tea, hot snacks & campfire gathering
+5. 4x4 offroad mountain jeep transfers from Suryanelli hub to campsite
+6. Guided sunrise hike / Kolukkumalai sunrise safari
+7. Clean, sanitized Western washrooms with hot water facilities
+8. 24/7 Gated perimeter security and certified forest marshals
+
+## Timings & Schedule
+- **Check-in:** 02:00 PM (Welcome snacks & hot tea at Suryanelli Hub)
+- **4x4 Convoy Transfer:** 02:30 PM – 03:30 PM
+- **Campfire & BBQ:** 08:00 PM – 10:30 PM
+- **Sunrise Safari Departure:** 04:30 AM (for peak cloud-bed sunrise)
+- **Breakfast & Checkout:** 11:00 AM
+
+## Transparent Booking & Cancellation Terms
+- **Advance Deposit:** 30% advance deposit locks dates and permits; remaining balance payable on arrival.
+- **Cancellation Policy:**
+  - > 7 Days before check-in: 100% full refund
+  - 48 Hours to 7 Days: 50% refund
+  - < 48 Hours: Non-refundable (Free date reschedule in case of extreme weather or road blockades)
+- **Payment Methods:** 0% Fee Direct UPI (GPay, PhonePe, Paytm), Credit/Debit Cards, Netbanking via Razorpay.
+
+## Core Links
+- [Munnar & Suryanelli Camps](https://www.aanandham.in/camps/munnar): 7,900 FT high-altitude ridge camping and Kolukkumalai sunrise safaris.
+- [Vagamon Pine Glamping](https://www.aanandham.in/camps/vagamon): 3,800 FT pine forest glamping with offroad jeep trails.
+- [Wayanad Forest Pods](https://www.aanandham.in/camps/wayanad): 4,200 FT cloud-level wooden ridge pods.
+- [Explore All Sanctuaries](https://www.aanandham.in/camps): Complete catalog of verified high-altitude campsites across Kerala.
+- [About & Ethos](https://www.aanandham.in/about): Conservation, local community guides, and wilderness charter.
+- [Expedition Concierge Desk](https://www.aanandham.in/contact): 24/7 mountain support and custom group expeditions.
+- [Camper Boarding Pass Portal](https://www.aanandham.in/pass): Digital verification and pass lookup.
+
+## Optional
+- [Full LLM Knowledge Manifest](https://www.aanandham.in/llms-full.txt): Complete detailed guide and operational data.
