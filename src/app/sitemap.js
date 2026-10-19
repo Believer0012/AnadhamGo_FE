@@ -1,5 +1,6 @@
 import { INITIAL_ALL_CAMPS } from '@/lib/campsData';
 import { getAllBlogSlugs } from '@/lib/blogPosts';
+import { getVisibleDestinations } from '@/lib/destinationsData';
 
 export default function sitemap() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aanandham.in';
@@ -30,6 +31,36 @@ export default function sitemap() {
       lastModified: currentDate,
       changeFrequency: 'daily',
       priority: 0.9,
+    },
+    {
+      url: `${siteUrl}/events`,
+      lastModified: currentDate,
+      changeFrequency: 'weekly',
+      priority: 0.75,
+    },
+    {
+      url: `${siteUrl}/workation`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${siteUrl}/plan`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${siteUrl}/stays`,
+      lastModified: currentDate,
+      changeFrequency: 'daily',
+      priority: 0.85,
+    },
+    {
+      url: `${siteUrl}/destinations`,
+      lastModified: currentDate,
+      changeFrequency: 'weekly',
+      priority: 0.85,
     },
     {
       url: `${siteUrl}/blog`,
@@ -67,6 +98,15 @@ export default function sitemap() {
     priority: 0.7,
   }));
 
+  // Destination hub pages: live + Parvati Valley (primary focus) rank highest. Demo destinations are excluded —
+  // getVisibleDestinations() only includes them when the demo flag is on)
+  const destinationRoutes = getVisibleDestinations().map((destination) => ({
+    url: `${siteUrl}/destinations/${destination.slug}`,
+    lastModified: currentDate,
+    changeFrequency: 'weekly',
+    priority: destination.status === 'live' || destination.group === 'himalaya' ? 0.85 : 0.5,
+  }));
+
   // Note: /login, /signup, /admin are omitted from sitemap to prevent crawl budget dilution
-  return [...staticRoutes, ...campRoutes, ...blogRoutes];
+  return [...staticRoutes, ...campRoutes, ...blogRoutes, ...destinationRoutes];
 }

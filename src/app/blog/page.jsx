@@ -5,14 +5,14 @@ import { BLOG_POSTS } from '@/lib/blogPosts';
 import { Star, Sunrise, Flame, Tent, Footprints, Telescope, Leaf, MapPin, Clock } from 'lucide-react';
 
 export const metadata = {
-  title: 'Munnar Camping & Trekking Guide — Blog',
-  description: 'Honest, detailed guides to camping, glamping and trekking in Munnar — Kolukkumalai sunrise trek, Meesapulimala difficulty, packing lists, itineraries and Kerala camp comparisons.',
+  title: 'Travel guides — Parvati Valley, Kasol & Munnar',
+  description: 'Honest, practical guides to the Parvati Valley — the Kheerganga trek, choosing between Kalga, Pulga and Tosh, the best time to visit Kasol — plus camping and trekking in Munnar.',
   alternates: {
     canonical: 'https://www.aanandham.in/blog',
   },
   openGraph: {
-    title: 'Munnar Camping & Trekking Guide — Blog',
-    description: 'Honest, detailed guides to camping, glamping and trekking in Munnar — Kolukkumalai sunrise trek, Meesapulimala difficulty, packing lists, itineraries and Kerala camp comparisons.',
+    title: 'Travel guides — Parvati Valley, Kasol & Munnar',
+    description: 'Honest, practical guides to the Parvati Valley — the Kheerganga trek, choosing between Kalga, Pulga and Tosh, the best time to visit Kasol — plus camping and trekking in Munnar.',
     url: 'https://www.aanandham.in/blog',
     siteName: 'Aanandham.go',
     images: [
@@ -20,7 +20,7 @@ export const metadata = {
         url: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=1200&h=630&q=80',
         width: 1200,
         height: 630,
-        alt: 'Munnar camping and trekking guides',
+        alt: 'Aanandham.go travel guides',
       },
     ],
     locale: 'en_IN',
@@ -57,7 +57,7 @@ export default function BlogIndexPage() {
   return (
     <div style={{ fontFamily: 'var(--font-jakarta), "Plus Jakarta Sans", sans-serif', backgroundColor: '#F8F9F5', color: '#121613', minHeight: '100vh' }}>
       <SiteHeader transparentOnTop={false} activePage="blog" />
-      <main style={{ fontFamily: 'var(--font-jakarta), "Plus Jakarta Sans", sans-serif', backgroundColor: '#F8F9F5', color: '#121613', minHeight: '100vh' }}>
+      <main id="main-content" style={{ fontFamily: 'var(--font-jakarta), "Plus Jakarta Sans", sans-serif', backgroundColor: '#F8F9F5', color: '#121613', minHeight: '100vh' }}>
         {/* ── HERO: MATCHES CAMPS/ABOUT LANDING DESIGN ── */}
         <section style={{
           background: 'linear-gradient(180deg, #101E13 0%, #0D170F 100%)',
@@ -94,7 +94,7 @@ export default function BlogIndexPage() {
                 margin: '0 0 16px',
                 color: '#FFFFFF'
               }}>
-                Munnar Camping & <span style={{ color: '#D5ED55' }}>Trekking Field Guides</span>
+                Travel guides for <span style={{ color: '#F1B893' }}>the mountains</span>
               </h1>
 
               <p style={{
@@ -103,12 +103,12 @@ export default function BlogIndexPage() {
                 lineHeight: 1.7,
                 margin: '0 0 28px'
               }}>
-                Honest field guides from the campsite floor — Kolukkumalai sunrise timing, Meesapulimala difficulty, packing lists, and Kerala hill-station comparisons. Written for people who actually want to book.
+                Practical, honest guides to the Parvati Valley — the Kheerganga trek, choosing between Kalga, Pulga and Tosh, when to visit Kasol — plus our field guides to camping and trekking in Munnar.
               </p>
 
               <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
                 <Link
-                  href="/camps"
+                  href="/plan"
                   className="btn-lime"
                   style={{
                     padding: '13px 30px',
@@ -118,7 +118,7 @@ export default function BlogIndexPage() {
                     boxShadow: '0 10px 30px rgba(213, 237, 85, 0.3)'
                   }}
                 >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>Explore Our Camps →</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>Plan your trip →</span>
                 </Link>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#A2B6A6', fontWeight: '700' }}>
                   <Clock size={15} /> {BLOG_POSTS.length} field guides · updated {new Date(sorted[0].date).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}

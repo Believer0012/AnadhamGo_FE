@@ -11,7 +11,8 @@ export default function CustomSelectDropdown({
     onChange,
     theme = 'light', // 'light' | 'dark'
     placeholder = 'Select Option',
-    id
+    id,
+    ariaLabel // accessible name when no visible label is rendered
 }) {
     const generatedId = useId();
     const [isOpen, setIsOpen] = useState(false);
@@ -113,6 +114,7 @@ export default function CustomSelectDropdown({
                 aria-haspopup="listbox"
                 aria-expanded={isOpen}
                 aria-labelledby={label ? `${dropdownId}-label ${dropdownId}-button` : undefined}
+                aria-label={!label ? ariaLabel : undefined}
                 aria-controls={`${dropdownId}-listbox`}
                 onClick={() => setIsOpen(!isOpen)}
                 onKeyDown={handleKeyDown}

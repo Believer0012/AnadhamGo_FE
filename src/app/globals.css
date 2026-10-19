@@ -1,5 +1,5 @@
 html {
-  background-color: #F8F9F5 !important;
+  background-color: #F8FAF9 !important;
   color: #121613;
   overflow-x: clip;
   scrollbar-gutter: stable;
@@ -45,7 +45,7 @@ body {
   position: relative;
   margin: 0 !important;
   padding: 0 !important;
-  background-color: #F8F9F5 !important;
+  background-color: #F8FAF9 !important;
   color: #121613;
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;

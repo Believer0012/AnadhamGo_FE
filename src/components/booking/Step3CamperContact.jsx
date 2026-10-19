@@ -1,541 +1,125 @@
 "use client";
-import React from 'react';
-import { User, Phone, Mail, FileText, ArrowRight, ArrowLeft, Leaf, Drumstick, Utensils, Minus, Plus, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { inr } from '../../lib/utils';
-import { ROW_GAP_10 } from './BookingConstants';
-import { validateEmailClient } from '../../lib/emailValidatorCore';
-import BookingValidationPopup from './BookingValidationPopup';
+import React, { useState } from 'react';
+import { Minus, Plus, Check } from 'lucide-react';
+import { isValidPhoneNumber } from '../../lib/whatsapp';
+import { BK, stepperBtn, sectionLabel } from './bookingUI';
 
+const DIET_OPTIONS = ['Mild spice for kids', 'Jain', 'Gluten-sensitive'];
+const inputStyle = { height: '46px', padding: '0 14px', borderRadius: BK.radiusInput, border: `1.5px solid rgba(19,32,26,0.2)`, fontSize: '16px', color: BK.ink, background: '#fff', boxSizing: 'border-box', width: '100%', fontFamily: 'inherit' };
+const labelStyle = { fontSize: '13px', fontWeight: 600, color: BK.ink };
+const errStyle = { fontSize: '12px', color: '#c02434', fontWeight: 600 };
+
+// Step 3 — content only. Contact + meals + dietary needs + notes.
 export default function Step3CamperContact({
-    customerName,
-    setCustomerName,
-    customerPhone,
-    setCustomerPhone,
-    customerEmail,
-    setCustomerEmail,
-    specialNotes,
-    setSpecialNotes,
-    dietaryChoice,
-    setDietaryChoice,
-    vegCount,
-    setVegCount,
-    nonVegCount,
-    setNonVegCount,
-    adults = 2,
-    children = 0,
-    totalGuests: propTotalGuests,
-    currentStepPrice,
-    honeypot,
-    setHoneypot,
-    handleStep3Next,
-    handleDirectWhatsAppBooking,
-    setStep,
-    setValidationError = () => {}
+    customerName = '', setCustomerName = () => {},
+    customerPhone = '', setCustomerPhone = () => {},
+    customerEmail = '', setCustomerEmail = () => {},
+    specialNotes = '', setSpecialNotes = () => {},
+    dietaryChoice = 'Standard', setDietaryChoice = () => {},
+    vegCount = 0, setVegCount = () => {},
+    nonVegCount = 0,
+    totalGuests = 2,
+    honeypot = '', setHoneypot = () => {},
 }) {
-    const totalGuests = propTotalGuests || (adults + children) || 2;
-    
-    // Input references for auto-scroll & focus on error
-    const nameInputRef = React.useRef(null);
-    const phoneInputRef = React.useRef(null);
-    const emailInputRef = React.useRef(null);
-
-    // Validation State
-    const [touched, setTouched] = React.useState({ name: false, phone: false, email: false });
-    const [hasSubmitted, setHasSubmitted] = React.useState(false);
-    const [popupErrors, setPopupErrors] = React.useState([]);
-    const [emailTouched, setEmailTouched] = React.useState(false);
-    const [liveCheckStatus, setLiveCheckStatus] = React.useState(null);
-
-    // Synchronous client-side check
-    const clientCheck = React.useMemo(() => {
-        if (!customerEmail || !customerEmail.trim()) return null;
-        return validateEmailClient(customerEmail);
-    }, [customerEmail]);
-
-    // Live DNS MX check with 450ms debounce
-    React.useEffect(() => {
-        const trimmed = String(customerEmail || '').trim();
-        if (!trimmed || !trimmed.includes('@') || !trimmed.includes('.')) {
-            setLiveCheckStatus(null);
-            return;
-        }
-
-        const timer = setTimeout(async () => {
-            setLiveCheckStatus('checking');
-            try {
-                const res = await fetch(`/api/validate-email?email=${encodeURIComponent(trimmed)}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setLiveCheckStatus(data);
-                } else {
-                    setLiveCheckStatus(null);
-                }
-            } catch {
-                setLiveCheckStatus(null);
-            }
-        }, 450);
-
-        return () => clearTimeout(timer);
-    }, [customerEmail]);
-
-    const isValidPhoneNumber = (num) => {
-        const cleaned = String(num || '').replace(/\D/g, '');
-        return cleaned.length >= 10 && cleaned.length <= 13;
+    const [touched, setTouched] = useState({});
+    const selectedDiets = String(dietaryChoice || '').split(',').map((s) => s.trim()).filter((s) => s && s.toLowerCase() !== 'standard');
+    const toggleDiet = (d) => {
+        const set = new Set(selectedDiets);
+        set.has(d) ? set.delete(d) : set.add(d);
+        setDietaryChoice(set.size ? Array.from(set).join(', ') : 'Standard');
     };
 
-    // Live field error evaluations
-    const isNameEmpty = !customerName || !customerName.trim();
-    const isNameInvalid = isNameEmpty || customerName.trim().length < 2;
-    const isNameError = (touched.name || hasSubmitted) && isNameInvalid;
+    const nameErr = touched.name && !customerName.trim() ? 'Please enter your full name.' : '';
+    const phoneErr = touched.phone && (!customerPhone.trim() || !isValidPhoneNumber(customerPhone)) ? 'Enter a valid 10-digit number.' : '';
+    const emailErr = touched.email && customerEmail.trim() && !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(customerEmail.trim()) ? 'Enter a valid email address.' : '';
 
-    const isPhoneEmpty = !customerPhone || !customerPhone.trim();
-    const isPhoneInvalid = isPhoneEmpty || !isValidPhoneNumber(customerPhone);
-    const isPhoneError = (touched.phone || hasSubmitted) && isPhoneInvalid;
-
-    const isEmailEmpty = !customerEmail || !customerEmail.trim();
-    const isEmailFormatValid = Boolean(clientCheck?.isValid);
-    const isEmailDnsInvalid = liveCheckStatus && liveCheckStatus !== 'checking' && !liveCheckStatus.isValid;
-    const isEmailError = (touched.email || hasSubmitted || emailTouched) && (isEmailEmpty || !isEmailFormatValid || isEmailDnsInvalid);
-    const isEmailVerified = Boolean(customerEmail) && clientCheck?.isValid && liveCheckStatus?.isValid;
-
-    // Focus helper
-    const focusField = (field) => {
-        if (field === 'name' && nameInputRef.current) {
-            nameInputRef.current.focus();
-            nameInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } else if (field === 'phone' && phoneInputRef.current) {
-            phoneInputRef.current.focus();
-            phoneInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } else if (field === 'email' && emailInputRef.current) {
-            emailInputRef.current.focus();
-            emailInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    };
-
-    // Error Collector
-    const collectErrors = () => {
-        const errs = [];
-        if (isNameEmpty) {
-            errs.push({ field: 'name', label: 'Full Name', message: 'Full Name is required (as per ID)' });
-        } else if (customerName.trim().length < 2) {
-            errs.push({ field: 'name', label: 'Full Name', message: 'Full Name must be at least 2 letters' });
-        }
-
-        if (isPhoneEmpty) {
-            errs.push({ field: 'phone', label: 'WhatsApp Number', message: 'WhatsApp contact number is required' });
-        } else if (!isValidPhoneNumber(customerPhone)) {
-            errs.push({ field: 'phone', label: 'WhatsApp Number', message: 'Enter a valid 10-digit mobile number' });
-        }
-
-        if (isEmailEmpty) {
-            errs.push({ field: 'email', label: 'Email Address', message: 'Email address is mandatory for official pass' });
-        } else if (clientCheck && !clientCheck.isValid) {
-            errs.push({ field: 'email', label: 'Email Address', message: clientCheck.message || 'Invalid email format' });
-        } else if (isEmailDnsInvalid) {
-            errs.push({ field: 'email', label: 'Email Address', message: liveCheckStatus.message || 'Mail server not reachable' });
-        }
-        return errs;
-    };
-
-    // Proceed to Step 4 (Payment) with full custom UI validation
-    const onProceedToPayment = () => {
-        const errs = collectErrors();
-        if (errs.length > 0) {
-            setHasSubmitted(true);
-            setTouched({ name: true, phone: true, email: true });
-            setPopupErrors(errs);
-            setValidationError(errs.map(e => e.message).join(' · '));
-            focusField(errs[0].field);
-            return;
-        }
-        setPopupErrors([]);
-        setValidationError('');
-        handleStep3Next();
-    };
+    const vegPct = totalGuests ? (vegCount / totalGuests) * 100 : 0;
+    const nonPct = 100 - vegPct;
 
     return (
-        <div>
-            {/* ── CUSTOM LIVE ERROR POP-UP / ALERT CARD ── */}
-            {popupErrors.length > 0 && (
-                <BookingValidationPopup
-                    errors={popupErrors}
-                    title="Required Details Incomplete"
-                    onClose={() => setPopupErrors([])}
-                    onFocusField={focusField}
-                />
-            )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* Honeypot (hidden anti-bot field) */}
+            <input type="text" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', opacity: 0 }} />
 
-            <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: '800', color: '#59655D', textTransform: 'uppercase', letterSpacing: '0.6px', margin: 0 }}>
-                        Lead Explorer Contact & Expedition Preferences
-                    </label>
-                    <span style={{ fontSize: '11px', fontWeight: '700', color: '#DC2626' }}>
-                        * Required Fields Marked in Red
-                    </span>
-                </div>
-                
-                <div style={{ display: 'none', position: 'absolute', left: '-9999px' }} aria-hidden="true">
-                    <input
-                        type="text"
-                        tabIndex="-1"
-                        value={honeypot}
-                        onChange={(e) => setHoneypot(e.target.value)}
-                    />
+            {/* Contact */}
+            <fieldset style={{ border: 0, margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <legend style={{ ...sectionLabel, padding: 0 }}>Who should we contact?</legend>
+                <p style={{ margin: '-4px 0 0', fontSize: '13px', color: BK.muted }}>We&#39;ll confirm your booking on WhatsApp. No account needed.</p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label htmlFor="gd-name" style={labelStyle}>Full name</label>
+                    <input id="gd-name" type="text" autoComplete="name" required placeholder="e.g. Anand Kumar" value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)} onBlur={() => setTouched((t) => ({ ...t, name: true }))}
+                        style={{ ...inputStyle, borderColor: nameErr ? '#e0637a' : inputStyle.border }} />
+                    {nameErr ? <span style={errStyle}>{nameErr}</span> : null}
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '14px', marginBottom: '16px' }}>
-                    
-                    {/* 1. FULL NAME */}
-                    <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                            <label 
-                                htmlFor="booking-field-name" 
-                                style={{ 
-                                    fontSize: '12px', 
-                                    fontWeight: '800', 
-                                    color: isNameError ? '#DC2626' : '#121613',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px'
-                                }}
-                            >
-                                <User size={13} color={isNameError ? '#DC2626' : '#166534'} />
-                                <span>Full Name *</span>
-                            </label>
-                            {isNameError ? (
-                                <span style={{ color: '#DC2626', fontSize: '10.5px', fontWeight: '800' }}>⚠️ Missing</span>
-                            ) : (
-                                customerName.trim().length >= 2 && <span style={{ color: '#166534', fontSize: '10.5px', fontWeight: '800' }}>✓ Valid</span>
-                            )}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: '12px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label htmlFor="gd-phone" style={labelStyle}>WhatsApp number</label>
+                        <div style={{ display: 'flex' }}>
+                            <span style={{ height: '46px', boxSizing: 'border-box', padding: '0 12px', border: `1.5px solid rgba(19,32,26,0.2)`, borderRight: 0, borderRadius: `${BK.radiusInput} 0 0 ${BK.radiusInput}`, background: BK.panel, fontSize: '16px', fontWeight: 600, display: 'flex', alignItems: 'center' }}>+91</span>
+                            <input id="gd-phone" type="tel" inputMode="numeric" autoComplete="tel-national" required placeholder="94001 23456" value={customerPhone}
+                                onChange={(e) => setCustomerPhone(e.target.value)} onBlur={() => setTouched((t) => ({ ...t, phone: true }))}
+                                style={{ ...inputStyle, borderRadius: `0 ${BK.radiusInput} ${BK.radiusInput} 0`, borderColor: phoneErr ? '#e0637a' : 'rgba(19,32,26,0.2)' }} />
                         </div>
-                        <input
-                            id="booking-field-name"
-                            ref={nameInputRef}
-                            type="text"
-                            className={`booking-modal-input ${isNameError ? 'is-invalid' : (customerName.trim().length >= 2 ? 'is-valid' : '')}`}
-                            placeholder="e.g. Anand Kumar"
-                            value={customerName}
-                            onBlur={() => setTouched(prev => ({ ...prev, name: true }))}
-                            onChange={(e) => { 
-                                setCustomerName(e.target.value); 
-                                if (e.target.value.trim().length >= 2) {
-                                    setPopupErrors(prev => prev.filter(item => item.field !== 'name'));
-                                    setValidationError('');
-                                }
-                            }}
-                            aria-invalid={isNameError ? "true" : "false"}
-                            required
-                        />
-                        {isNameError && (
-                            <div className="custom-field-error-pill">
-                                <AlertCircle size={13} />
-                                <span>{isNameEmpty ? 'Full Name is required as per government ID' : 'Name must be at least 2 letters'}</span>
-                            </div>
-                        )}
+                        {phoneErr ? <span style={errStyle}>{phoneErr}</span> : null}
                     </div>
-
-                    {/* 2. WHATSAPP PHONE */}
-                    <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                            <label 
-                                htmlFor="booking-field-phone"
-                                style={{ 
-                                    fontSize: '12px', 
-                                    fontWeight: '800', 
-                                    color: isPhoneError ? '#DC2626' : '#121613',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px'
-                                }}
-                            >
-                                <Phone size={13} color={isPhoneError ? '#DC2626' : '#166534'} />
-                                <span>WhatsApp Phone *</span>
-                            </label>
-                            {isPhoneError ? (
-                                <span style={{ color: '#DC2626', fontSize: '10.5px', fontWeight: '800' }}>⚠️ Invalid</span>
-                            ) : (
-                                customerPhone.trim() && isValidPhoneNumber(customerPhone) && (
-                                    <span style={{ color: '#166534', fontSize: '10.5px', fontWeight: '800' }}>✓ Valid</span>
-                                )
-                            )}
-                        </div>
-                        <input
-                            id="booking-field-phone"
-                            ref={phoneInputRef}
-                            type="tel"
-                            className={`booking-modal-input ${isPhoneError ? 'is-invalid' : (customerPhone.trim() && isValidPhoneNumber(customerPhone) ? 'is-valid' : '')}`}
-                            placeholder="e.g. 94001 23456"
-                            value={customerPhone}
-                            onBlur={() => setTouched(prev => ({ ...prev, phone: true }))}
-                            onChange={(e) => { 
-                                setCustomerPhone(e.target.value); 
-                                if (isValidPhoneNumber(e.target.value)) {
-                                    setPopupErrors(prev => prev.filter(item => item.field !== 'phone'));
-                                    setValidationError('');
-                                }
-                            }}
-                            aria-invalid={isPhoneError ? "true" : "false"}
-                            required
-                        />
-                        {isPhoneError && (
-                            <div className="custom-field-error-pill">
-                                <AlertCircle size={13} />
-                                <span>{isPhoneEmpty ? 'WhatsApp number is required for booking voucher' : 'Please enter a valid 10-digit mobile number'}</span>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* 3. EMAIL ADDRESS */}
-                    <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                            <label 
-                                htmlFor="booking-field-email"
-                                style={{ 
-                                    fontSize: '12px', 
-                                    fontWeight: '800', 
-                                    color: isEmailError ? '#DC2626' : '#121613',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px'
-                                }}
-                            >
-                                <Mail size={13} color={isEmailError ? '#DC2626' : '#166534'} />
-                                <span>Email Address *</span>
-                            </label>
-                            {isEmailError ? (
-                                <span style={{ color: '#DC2626', fontSize: '10.5px', fontWeight: '800' }}>⚠️ Missing / Invalid</span>
-                            ) : (
-                                isEmailVerified && <span style={{ color: '#166534', fontSize: '10.5px', fontWeight: '800' }}>✓ Verified</span>
-                            )}
-                        </div>
-                        <input
-                            id="booking-field-email"
-                            ref={emailInputRef}
-                            type="email"
-                            className={`booking-modal-input ${isEmailError ? 'is-invalid' : (isEmailVerified ? 'is-valid' : '')}`}
-                            placeholder="e.g. anand@gmail.com"
-                            value={customerEmail}
-                            onChange={(e) => { 
-                                setCustomerEmail(e.target.value); 
-                                setValidationError('');
-                                if (e.target.value.includes('@') && e.target.value.includes('.')) {
-                                    setPopupErrors(prev => prev.filter(item => item.field !== 'email'));
-                                }
-                            }}
-                            onBlur={() => {
-                                setEmailTouched(true);
-                                setTouched(prev => ({ ...prev, email: true }));
-                            }}
-                            aria-invalid={isEmailError ? "true" : "false"}
-                            required
-                        />
-
-                        {isEmailError && (
-                            <div className="custom-field-error-pill">
-                                <AlertCircle size={13} />
-                                <span>
-                                    {isEmailEmpty
-                                        ? 'Email is mandatory for official pass & QR entry pass'
-                                        : (clientCheck?.message || (liveCheckStatus && !liveCheckStatus.isValid ? liveCheckStatus.message : 'Please enter a valid email address'))}
-                                </span>
-                            </div>
-                        )}
-
-                        {/* Live Status and Typo Suggestion */}
-                        {clientCheck && !clientCheck.isValid && (
-                            <div style={{ fontSize: '10.5px', color: '#DC2626', fontWeight: '700', marginTop: '4px' }}>
-                                ⚠️ {clientCheck.message}
-                                {clientCheck.suggestion && (
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            const parts = customerEmail.split('@');
-                                            const corrected = parts[0] + '@' + clientCheck.suggestion;
-                                            setCustomerEmail(corrected);
-                                            setValidationError('');
-                                            setPopupErrors(prev => prev.filter(item => item.field !== 'email'));
-                                        }}
-                                        style={{
-                                            marginLeft: '6px',
-                                            background: '#166534',
-                                            color: '#FFFFFF',
-                                            border: 'none',
-                                            borderRadius: '6px',
-                                            padding: '2px 6px',
-                                            fontSize: '10px',
-                                            fontWeight: '800',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        Use @{clientCheck.suggestion}
-                                    </button>
-                                )}
-                            </div>
-                        )}
-
-                        {clientCheck?.isValid && liveCheckStatus === 'checking' && (
-                            <div style={{ fontSize: '10.5px', color: '#59655D', fontWeight: '600', marginTop: '4px' }}>
-                                🔍 Verifying live mail domain...
-                            </div>
-                        )}
-
-                        {isEmailVerified && !isEmailError && (
-                            <div style={{ fontSize: '10.5px', color: '#166534', fontWeight: '800', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <CheckCircle2 size={12} />
-                                <span>Live Verified Email · Official Pass will be delivered here</span>
-                            </div>
-                        )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label htmlFor="gd-email" style={labelStyle}>Email <span style={{ fontWeight: 500, color: BK.muted }}>(optional)</span></label>
+                        <input id="gd-email" type="email" autoComplete="email" placeholder="For your booking receipt" value={customerEmail}
+                            onChange={(e) => setCustomerEmail(e.target.value)} onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+                            style={{ ...inputStyle, borderColor: emailErr ? '#e0637a' : 'rgba(19,32,26,0.2)' }} />
+                        {emailErr ? <span style={errStyle}>{emailErr}</span> : null}
                     </div>
                 </div>
+            </fieldset>
 
-                {/* Campfire Meal Preference */}
-                <div style={{ background: '#F8F9F5', padding: '16px 18px', borderRadius: '18px', border: '1px solid rgba(18, 22, 19, 0.08)', marginBottom: '14px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '6px' }}>
-                        <div>
-                            <div style={{ fontSize: '12.5px', fontWeight: '800', color: '#121613', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                                <Utensils size={14} /> Live Campfire Dinner & Breakfast Prep
-                            </div>
-                            <div style={{ fontSize: '11px', color: '#59655D' }}>
-                                Distribute {totalGuests} camper meal portions (Vegetarian vs Non-Veg BBQ):
-                            </div>
-                        </div>
-                        <span style={{ fontSize: '11px', fontWeight: '800', color: '#166534', background: '#DCFCE7', padding: '2px 8px', borderRadius: '999px' }}>
-                            {vegCount} Veg + {nonVegCount} Non-Veg
-                        </span>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px', marginBottom: '12px' }}>
-                        <div style={{ background: '#FFFFFF', padding: '10px 12px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.06)' }}>
-                            <div style={{ fontSize: '11px', color: '#166534', fontWeight: '800', marginBottom: '4px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}><Leaf size={12} /> Vegetarian Campers</div>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const newVeg = Math.max(0, vegCount - 1);
-                                        setVegCount(newVeg);
-                                        setNonVegCount(totalGuests - newVeg);
-                                    }}
-                                    aria-label="Decrease vegetarian campers count"
-                                    style={{ width: '26px', height: '26px', borderRadius: '50%', border: '1px solid rgba(0,0,0,0.15)', background: '#F8F9F5', cursor: 'pointer', fontWeight: '800' }}
-                                >
-                                    -
-                                </button>
-                                <span style={{ fontSize: '14px', fontWeight: '800' }}>{vegCount}</span>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const newVeg = Math.min(totalGuests, vegCount + 1);
-                                        setVegCount(newVeg);
-                                        setNonVegCount(totalGuests - newVeg);
-                                    }}
-                                    aria-label="Increase vegetarian campers count"
-                                    style={{ width: '26px', height: '26px', borderRadius: '50%', border: '1px solid rgba(0,0,0,0.15)', background: '#F8F9F5', cursor: 'pointer', fontWeight: '800' }}
-                                >
-                                    +
-                                </button>
-                            </div>
-                        </div>
-
-                        <div style={{ background: '#FFFFFF', padding: '10px 12px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.06)' }}>
-                            <div style={{ fontSize: '11px', color: '#B45309', fontWeight: '800', marginBottom: '4px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}><Drumstick size={12} /> Non-Veg BBQ Campers</div>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const newNonVeg = Math.max(0, nonVegCount - 1);
-                                        setNonVegCount(newNonVeg);
-                                        setVegCount(totalGuests - newNonVeg);
-                                    }}
-                                    aria-label="Decrease non-veg campers count"
-                                    style={{ width: '26px', height: '26px', borderRadius: '50%', border: '1px solid rgba(0,0,0,0.15)', background: '#F8F9F5', cursor: 'pointer', fontWeight: '800' }}
-                                >
-                                    -
-                                </button>
-                                <span style={{ fontSize: '14px', fontWeight: '800' }}>{nonVegCount}</span>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const newNonVeg = Math.min(totalGuests, nonVegCount + 1);
-                                        setNonVegCount(newNonVeg);
-                                        setVegCount(totalGuests - newNonVeg);
-                                    }}
-                                    aria-label="Increase non-veg campers count"
-                                    style={{ width: '26px', height: '26px', borderRadius: '50%', border: '1px solid rgba(0,0,0,0.15)', background: '#F8F9F5', cursor: 'pointer', fontWeight: '800' }}
-                                >
-                                    +
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Dietary Special Notes */}
-                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                        {['Standard Spicing', 'Mild Kids Spicing', 'Jain Pure Veg', 'Gluten Sensitive'].map(diet => (
-                            <button
-                                key={diet}
-                                type="button"
-                                onClick={() => setDietaryChoice(diet)}
-                                style={{
-                                    padding: '4px 10px',
-                                    borderRadius: '8px',
-                                    border: dietaryChoice === diet ? '1px solid #166534' : '1px solid rgba(18,22,19,0.12)',
-                                    background: dietaryChoice === diet ? '#166534' : '#FFFFFF',
-                                    color: dietaryChoice === diet ? '#FFFFFF' : '#121613',
-                                    fontSize: '11px',
-                                    fontWeight: '700',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                {diet}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Special Notes */}
+            {/* Meals */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div>
-                    <label style={{ fontSize: '12px', fontWeight: '700', color: '#121613', display: 'block', marginBottom: '4px' }}>
-                        Special Requests / Notes (Optional):
-                    </label>
-                    <textarea
-                        rows={2}
-                        className="booking-modal-input"
-                        placeholder="e.g. Arriving via Munnar bus stop at 1 PM; celebrating anniversary."
-                        value={specialNotes}
-                        onChange={(e) => setSpecialNotes(e.target.value)}
-                        style={{ resize: 'vertical' }}
-                    />
+                    <h3 style={sectionLabel}>Campfire dinner &amp; breakfast</h3>
+                    <p style={{ margin: '4px 0 0', fontSize: '13px', color: BK.muted }}>Included for all {totalGuests} campers. How many want vegetarian?</p>
+                </div>
+                <div aria-hidden="true" style={{ display: 'flex', height: '8px', borderRadius: BK.pill, overflow: 'hidden', background: '#eceee8' }}>
+                    <div style={{ width: `${vegPct}%`, background: BK.veg, transition: 'width .2s' }} />
+                    <div style={{ width: `${nonPct}%`, background: BK.nonveg, transition: 'width .2s' }} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '12px' }}>
+                    <div style={{ padding: '12px 14px', borderRadius: BK.radiusCardSm, border: `1px solid ${BK.lineMid}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14.5px', fontWeight: 600, color: BK.ink }}><span style={{ width: '10px', height: '10px', borderRadius: '50%', background: BK.veg }} />Vegetarian</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                            <button type="button" aria-label="One less vegetarian" disabled={vegCount <= 0} onClick={() => setVegCount(Math.max(0, vegCount - 1))} style={stepperBtn(vegCount <= 0)}><Minus size={15} strokeWidth={2.4} /></button>
+                            <span aria-live="polite" style={{ fontFamily: BK.fontDisplay, minWidth: '16px', textAlign: 'center', fontSize: '18px', fontWeight: 800, color: BK.ink }}>{vegCount}</span>
+                            <button type="button" aria-label="One more vegetarian" disabled={vegCount >= totalGuests} onClick={() => setVegCount(Math.min(totalGuests, vegCount + 1))} style={stepperBtn(vegCount >= totalGuests)}><Plus size={15} strokeWidth={2.4} /></button>
+                        </div>
+                    </div>
+                    <div style={{ padding: '12px 14px', borderRadius: BK.radiusCardSm, border: `1px solid ${BK.lineMid}`, background: '#fbfaf6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14.5px', fontWeight: 600, color: BK.ink }}><span style={{ width: '10px', height: '10px', borderRadius: '50%', background: BK.nonveg }} />Non-veg BBQ</div>
+                        <span style={{ fontFamily: BK.fontDisplay, fontSize: '18px', fontWeight: 800 }}>{nonVegCount}</span>
+                    </div>
+                </div>
+
+                <div style={{ marginTop: '4px', fontSize: '13px', fontWeight: 600, color: BK.ink }}>Any dietary needs? <span style={{ fontWeight: 500, color: BK.muted }}>Pick all that apply</span></div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {DIET_OPTIONS.map((d) => {
+                        const on = selectedDiets.includes(d);
+                        return (
+                            <button key={d} type="button" aria-pressed={on} onClick={() => toggleDiet(d)}
+                                style={{ minHeight: '40px', padding: '0 14px', borderRadius: BK.pill, border: on ? `1.5px solid ${BK.primary}` : `1px solid rgba(19,32,26,0.18)`, background: on ? BK.primary : '#fff', color: on ? '#fff' : BK.ink, fontSize: '13.5px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                                {on && <Check size={13} strokeWidth={3} />}{d}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
-            {/* Actions */}
-            <div className="booking-step-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
-                <button
-                    type="button"
-                    onClick={() => setStep(2)}
-                    className="btn-secondary"
-                    style={{ background: '#F1F3EC', border: 'none', fontSize: '13px', fontWeight: '700', color: '#59655D', cursor: 'pointer', padding: '10px 18px', borderRadius: '12px' }}
-                >
-                    ← Back
-                </button>
-                <button
-                    type="button"
-                    onClick={onProceedToPayment}
-                    className="btn-lime"
-                    style={{
-                        padding: '12px 28px',
-                        fontSize: '14px',
-                        fontWeight: '800',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        cursor: 'pointer'
-                    }}
-                >
-                    <span>Proceed</span>
-                    <ArrowRight size={15} />
-                </button>
+            {/* Notes */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label htmlFor="gd-notes" style={labelStyle}>Anything else we should know? <span style={{ fontWeight: 500, color: BK.muted }}>(optional)</span></label>
+                <textarea id="gd-notes" rows={3} placeholder="e.g. Arriving by bus at Munnar around 1 PM, celebrating an anniversary" value={specialNotes}
+                    onChange={(e) => setSpecialNotes(e.target.value)}
+                    style={{ padding: '12px 14px', borderRadius: BK.radiusInput, border: `1.5px solid rgba(19,32,26,0.2)`, fontSize: '16px', color: BK.ink, resize: 'vertical', lineHeight: 1.45, fontFamily: 'inherit' }} />
             </div>
         </div>
     );

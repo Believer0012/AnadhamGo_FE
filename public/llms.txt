@@ -1,16 +1,28 @@
-# Aanandham.go — Verified High-Altitude Glamping & Wilderness Basecamps
+# Aanandham.go — Discover Pulga, Kasol & the Parvati Valley
 
-> Official AI & LLM Knowledge Manifest for Aanandham.go (Kerala, India)
+> Official AI & LLM Knowledge Manifest for Aanandham.go (Himachal Pradesh & Kerala, India)
 
-Aanandham.go is a premium wilderness camping and high-altitude glamping platform based in Suryanelli, Munnar, Kerala, India. It provides verified mountain stays, guided 4x4 sunrise jeep safaris to Kolukkumalai (7,900 FT), starlit campfire nights, live BBQ platters, and luxury weatherproof dome tents with en-suite western washrooms.
+Aanandham.go is a mountain travel platform for discovering and planning trips in the Parvati Valley, Himachal Pradesh — Pulga, Kasol, Kalga, Tosh, Kheerganga, Manikaran and Malana — with destination guides, treks and mountain stays. Stays in the Parvati Valley are being added; the destination pages list only stays that are live. Aanandham.go also runs verified camps in Munnar, Kerala (details below).
 
 - **Website:** https://www.aanandham.in
-- **Location:** Suryanelli & Kolukkumalai Ridge, Munnar, Kerala 685618, India
-- **Coordinates:** 10.0889° N, 77.0595° E
-- **Basecamp Concierge:** +91 90748 58014 | bookings@aanandham.in
+- **Concierge:** +91 90748 58014 | bookings@aanandham.in
 - **Instagram:** @aanandham.go (https://instagram.com/aanandham.go)
 
-## Key Sanctuaries & Campsites
+## Parvati Valley Destinations (Himachal Pradesh)
+- [Pulga](https://www.aanandham.in/destinations/pulga): Car-free village of wooden houses beside an old deodar forest, a short walk from Barshaini (~2,200 m).
+- [Kasol](https://www.aanandham.in/destinations/kasol): Riverside town on the Parvati; the usual base for the valley (~1,580 m).
+- [Kalga](https://www.aanandham.in/destinations/kalga): Orchards and meadows above Barshaini (~2,250 m).
+- [Tosh](https://www.aanandham.in/destinations/tosh): Village at the head of the Tosh valley (~2,400 m).
+- [Kheerganga](https://www.aanandham.in/destinations/kheerganga): High meadow with a natural hot spring, ~12 km trek from near Barshaini (~2,950 m).
+- [Manikaran](https://www.aanandham.in/destinations/manikaran): Pilgrim town with hot springs, gurudwara and temples (~1,760 m).
+- [Malana](https://www.aanandham.in/destinations/malana): Ancient self-governing village; visitors must not touch walls, temples or residents (~2,650 m).
+- [Parvati Valley overview](https://www.aanandham.in/destinations/parvati-valley) · [All destinations](https://www.aanandham.in/destinations)
+
+## Munnar, Kerala — Camps Open for Booking
+- **Location:** Suryanelli & Kolukkumalai Ridge, Munnar, Kerala 685618, India
+- **Coordinates:** 10.0889° N, 77.0595° E
+
+## Key Sanctuaries & Campsites (Munnar region)
 - **Kolukkumalai Sunrise Ridge Camp (7,900 FT):** Highest tea estate camping with private 4x4 peak sunrise safari to Jagged Rock.
 - **Suryanelli Cloud Bed Glamping (6,200 FT):** Luxury alpine dome tents with en-suite washrooms overlooking the Anayirangal Dam valley.
 - **Meesapulimala Alpine Basecamp (7,200 FT):** High-altitude rhododendron valley trek camp with licensed forest guides.

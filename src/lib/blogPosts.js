@@ -1,4 +1,7 @@
-export const BLOG_POSTS = [
+import { HIMALAYA_BLOG_POSTS } from './blogPostsHimalaya';
+
+// Munnar / Kerala guides (live camps). Parvati Valley guides live in blogPostsHimalaya.js.
+const KERALA_BLOG_POSTS = [
   {
     slug: 'top-camps-in-munnar-best-camp-stays-guide',
     title: 'Top Camps in Munnar: 7 Best Camp Stays & Ridge Glamping (2026 Ranked)',
@@ -748,6 +751,9 @@ export const BLOG_POSTS = [
     ]
   }
 ];
+
+// Parvati Valley first (primary focus), then Munnar; every post carries a `region`.
+export const BLOG_POSTS = [...HIMALAYA_BLOG_POSTS, ...KERALA_BLOG_POSTS.map((p) => ({ region: 'kerala', ...p }))];
 
 export function getBlogPost(slug) {
   return BLOG_POSTS.find((p) => p.slug === slug) || null;

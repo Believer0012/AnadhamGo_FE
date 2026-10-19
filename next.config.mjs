@@ -83,11 +83,6 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: '/experiences',
-        destination: '/camps',
-        permanent: true,
-      },
-      {
         source: '/hotels',
         destination: '/camps',
         permanent: true,

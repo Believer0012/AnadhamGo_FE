@@ -5,13 +5,13 @@ export default function robots() {
     rules: [
       {
         userAgent: '*',
-        allow: ['/', '/llms.txt', '/llms-full.txt'],
-        disallow: ['/admin', '/api/', '/login', '/signup', '/pass/'],
+        allow: ['/', '/destinations', '/destinations/*', '/stays', '/plan', '/events', '/workation', '/llms.txt', '/llms-full.txt'],
+        disallow: ['/admin', '/api/', '/login', '/signup', '/pass/', '/wishlist'],
       },
       {
         userAgent: ['GPTBot', 'ChatGPT-User', 'PerplexityBot', 'ClaudeBot', 'Google-Extended', 'Applebot-Extended'],
-        allow: ['/', '/camps', '/camps/*', '/about', '/contact', '/llms.txt', '/llms-full.txt'],
-        disallow: ['/admin', '/api/', '/login', '/signup', '/pass/'],
+        allow: ['/', '/camps', '/camps/*', '/destinations', '/destinations/*', '/stays', '/plan', '/events', '/workation', '/about', '/contact', '/llms.txt', '/llms-full.txt'],
+        disallow: ['/admin', '/api/', '/login', '/signup', '/pass/', '/wishlist'],
       }
     ],
     sitemap: `${siteUrl}/sitemap.xml`,

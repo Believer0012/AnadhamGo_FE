@@ -6,6 +6,7 @@ import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Phone, Calendar, X, ChevronRight } from 'lucide-react';
 import { waLink, DEFAULT_WA_PHONE, logWhatsAppInquiry } from '@/lib/whatsapp';
 import { WhatsAppIcon } from './BrandIcons';
+import MobileTabBar from './MobileTabBar';
 
 const BookingEngineModal = dynamic(() => import('../BookingEngineModal'), { ssr: false });
 
@@ -25,6 +26,19 @@ export default function GlobalActionHub() {
 
     // Hide on marshal scanner or dedicated admin pages
     const isScanner = pathname?.startsWith('/marshal') || pathname?.startsWith('/admin');
+
+    // On the homepage the hero has its own search + CTAs; keep the dock out of the way until it's scrolled past
+    const [isOverHero, setIsOverHero] = useState(pathname === '/');
+    useEffect(() => {
+        if (pathname !== '/') {
+            setIsOverHero(false);
+            return;
+        }
+        const onScroll = () => setIsOverHero(window.scrollY < window.innerHeight * 0.7);
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, [pathname]);
 
     // Synchronize active stay context from current page
     useEffect(() => {
@@ -61,6 +75,8 @@ export default function GlobalActionHub() {
     if (isScanner) return null;
 
     const isCampPage = Boolean(activeCampContext?.camp && pathname?.startsWith('/camps/'));
+    // Stay pages keep the sticky booking bar (price + Book); all other pages get the tab bar
+    const showBookingBar = Boolean(pathname?.startsWith('/camps'));
     const camp = activeCampContext?.camp;
     const currentRoom = activeCampContext?.currentRoom;
     const roomPrice = activeCampContext?.roomPrice || camp?.price || 2499;
@@ -100,6 +116,7 @@ export default function GlobalActionHub() {
                     layout
                     transition={DOCK_SPRING}
                     className={`desktop-global-action-dock ${isExpanded ? 'is-expanded' : 'is-collapsed'}`}
+                    data-hero-hidden={isOverHero ? 'true' : 'false'}
                     aria-label="Quick Booking & Concierge Actions"
                     style={{
                         position: 'fixed',
@@ -108,13 +125,13 @@ export default function GlobalActionHub() {
                         zIndex: 999,
                         display: 'flex',
                         alignItems: 'center',
-                        background: '#121613',
-                        border: '1.5px solid rgba(229, 169, 59, 0.45)',
+                        background: '#0B150E',
+                        border: '1.5px solid rgba(255, 255, 255, 0.16)',
                         borderRadius: '999px',
                         padding: '7px 10px 7px 14px',
                         boxShadow: isExpanded 
-                            ? '0 20px 50px rgba(0, 0, 0, 0.5), 0 0 24px rgba(229, 169, 59, 0.3)' 
-                            : '0 12px 30px rgba(0, 0, 0, 0.4), 0 0 16px rgba(229, 169, 59, 0.25)',
+                            ? '0 20px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04)' 
+                            : '0 12px 30px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04)',
                         backdropFilter: 'blur(20px)',
                         WebkitBackdropFilter: 'blur(20px)',
                         cursor: isExpanded ? 'default' : 'pointer',
@@ -203,7 +220,7 @@ export default function GlobalActionHub() {
                                         transition: 'all 0.2s ease'
                                     }}
                                 >
-                                    <Phone size={13} color="#E5A93B" />
+                                    <Phone size={13} color="#F1B893" />
                                     <span>Call</span>
                                 </a>
 
@@ -260,21 +277,21 @@ export default function GlobalActionHub() {
                                 gap: '6px',
                                 padding: '7px 14px',
                                 borderRadius: '999px',
-                                background: '#E5A93B',
-                                color: '#121613',
+                                background: '#e5a93b',
+                                color: '#FFFFFF',
                                 border: 'none',
                                 fontSize: '12px',
                                 fontWeight: '900',
                                 letterSpacing: '-0.01em',
-                                boxShadow: '0 4px 14px rgba(229, 169, 59, 0.4)',
+                                boxShadow: '0 4px 14px rgba(169, 84, 43, 0.4)',
                                 whiteSpace: 'nowrap',
                                 cursor: 'pointer',
                                 transition: 'all 0.2s ease'
                             }}
                         >
-                            <Calendar size={13} strokeWidth={2.5} color="#121613" />
+                            <Calendar size={13} strokeWidth={2.5} color="#FFFFFF" />
                             <span>{isCampPage ? `Book Stay · ₹${roomPrice.toLocaleString('en-IN')}` : 'Book Now'}</span>
-                            {!isExpanded && <ChevronRight size={12} strokeWidth={3} color="#121613" />}
+                            {!isExpanded && <ChevronRight size={12} strokeWidth={3} color="#FFFFFF" />}
                         </button>
                     </motion.div>
 
@@ -322,8 +339,10 @@ export default function GlobalActionHub() {
             {/* ═════════════════════════════════════════════════════════════
                 2. MOBILE CLEAN LUXURY THEME ACTION BAR (Screens <= 768px)
             ═════════════════════════════════════════════════════════════ */}
+            {showBookingBar ? (
             <nav 
-                className="mobile-sticky-action-bar" 
+                className="mobile-sticky-action-bar"
+                data-hero-hidden={isOverHero ? 'true' : 'false'}
                 aria-label="Mobile Instant Booking Navigation"
                 style={{
                     position: 'fixed',
@@ -331,10 +350,10 @@ export default function GlobalActionHub() {
                     left: 0,
                     right: 0,
                     zIndex: 9999,
-                    background: 'rgba(18, 22, 19, 0.96)',
+                    background: 'rgba(11, 21, 14, 0.97)',
                     backdropFilter: 'blur(20px)',
                     WebkitBackdropFilter: 'blur(20px)',
-                    borderTop: '1px solid rgba(229, 169, 59, 0.3)',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
                     padding: '8px 12px calc(8px + env(safe-area-inset-bottom, 0px)) 12px',
                     display: 'none', // Controlled via CSS media query
                     alignItems: 'center',
@@ -362,8 +381,8 @@ export default function GlobalActionHub() {
                         transition: 'background 0.2s ease'
                     }}
                 >
-                    <Phone size={15} color="#E5A93B" />
-                    <span style={{ fontSize: '9.5px', fontWeight: '800', color: '#E5A93B', letterSpacing: '0.3px' }}>Call</span>
+                    <Phone size={15} color="#F1B893" />
+                    <span style={{ fontSize: '9.5px', fontWeight: '800', color: '#F1B893', letterSpacing: '0.3px' }}>Call</span>
                 </a>
 
                 {/* 2. WhatsApp Concierge Button (Dynamic with campsite, dates, guests & stay) */}
@@ -412,20 +431,20 @@ export default function GlobalActionHub() {
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             padding: '0 10px 0 12px',
-                            background: '#E5A93B',
+                            background: '#e5a93b',
                             borderRadius: '10px',
-                            color: '#121613',
+                            color: '#FFFFFF',
                             border: '1px solid rgba(255, 255, 255, 0.25)',
-                            boxShadow: '0 4px 16px rgba(229, 169, 59, 0.45)',
+                            boxShadow: '0 4px 16px rgba(169, 84, 43, 0.4)',
                             cursor: 'pointer'
                         }}
                     >
                         <div style={{ textAlign: 'left', minWidth: 0, lineHeight: 1.15 }}>
                             <div style={{ fontSize: '13px', fontWeight: '900', whiteSpace: 'nowrap' }}>
                                 ₹{roomPrice.toLocaleString('en-IN')}{' '}
-                                <span style={{ fontSize: '9.5px', fontWeight: '700', color: '#3A331A' }}>/ camper</span>
+                                <span style={{ fontSize: '9.5px', fontWeight: '700', color: 'rgba(255, 255, 255, 0.82)' }}>/ camper</span>
                             </div>
-                            <div style={{ fontSize: '9.5px', fontWeight: '700', color: '#3A331A', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '120px' }}>
+                            <div style={{ fontSize: '9.5px', fontWeight: '700', color: 'rgba(255, 255, 255, 0.82)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '120px' }}>
                                 {roomName}
                             </div>
                         </div>
@@ -433,8 +452,8 @@ export default function GlobalActionHub() {
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '3px',
-                            background: '#121613',
-                            color: '#D5ED55',
+                            background: 'rgba(0, 0, 0, 0.22)',
+                            color: '#FFFFFF',
                             padding: '5px 8px',
                             borderRadius: '7px',
                             fontSize: '11px',
@@ -458,23 +477,29 @@ export default function GlobalActionHub() {
                             alignItems: 'center',
                             justifyContent: 'center',
                             gap: '6px',
-                            background: '#E5A93B',
+                            background: '#e5a93b',
                             borderRadius: '10px',
-                            color: '#121613',
+                            color: '#FFFFFF',
                             border: '1px solid rgba(255, 255, 255, 0.2)',
                             fontWeight: '900',
                             fontSize: '13.5px',
                             letterSpacing: '-0.01em',
-                            boxShadow: '0 4px 16px rgba(229, 169, 59, 0.4)',
+                            boxShadow: '0 4px 16px rgba(169, 84, 43, 0.4)',
                             cursor: 'pointer'
                         }}
                     >
-                        <Calendar size={14} strokeWidth={2.5} color="#121613" />
+                        <Calendar size={14} strokeWidth={2.5} color="#FFFFFF" />
                         <span>BOOK NOW</span>
-                        <ChevronRight size={14} strokeWidth={3} color="#121613" />
+                        <ChevronRight size={14} strokeWidth={3} color="#FFFFFF" />
                     </button>
                 )}
             </nav>
+            ) : (
+                <MobileTabBar />
+            )}
+
+            {/* Keeps page content clear of the fixed mobile bar */}
+            <div className="ah-mobile-spacer" aria-hidden="true" />
 
             {/* ═════════════════════════════════════════════════════════════
                 3. FALLBACK GLOBAL BOOKING ENGINE MODAL (Multi-Use Everywhere)

@@ -1,7 +1,7 @@
 {
-  "name": "Aanandham.go Wilderness Camps",
+  "name": "Aanandham.go",
   "short_name": "Aanandham.go",
-  "description": "High-altitude tent glamping, Suryanelli ridge camping, and 4x4 Kolukkumalai sunrise treks in Munnar, Kerala.",
+  "description": "Discover Pulga, Kasol and the Parvati Valley — village guides, treks and mountain stays — plus verified camping in Munnar, Kerala.",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
@@ -31,8 +31,8 @@
       "type": "image/png"
     }
   ],
-  "theme_color": "#0E1A11",
-  "background_color": "#070E08",
+  "theme_color": "#0B150E",
+  "background_color": "#0B150E",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait"

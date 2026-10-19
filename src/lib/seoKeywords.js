@@ -1,8 +1,16 @@
-// SEO keyword library — long-tail coverage for the Munnar camping/glamping/trekking space.
-// Used in metadata across the site. Grouped by search intent cluster.
+// SEO keyword library — Himalaya-first (Parvati Valley), with long-tail coverage for the
+// Munnar camping/glamping/trekking space. Used in metadata across the site. Grouped by search intent cluster.
 export const SEO_KEYWORDS = [
   // Brand & core
-  'Aanandham', 'Aanandham.go', 'Aanandham Wilderness Camps', 'aanandham munnar',
+  'Aanandham', 'Aanandham.go', 'Aanandham Wilderness Camps', 'aanandham kasol', 'aanandham kalga', 'aanandham munnar',
+  // Parvati Valley (primary focus)
+  'pulga', 'pulga himachal', 'pulga fairy forest', 'pulga village stay', 'things to do in pulga',
+  'kasol', 'kasol trip', 'kasol travel guide', 'things to do in kasol', 'best time to visit kasol', 'kasol itinerary',
+  'kalga', 'kalga village', 'kalga stay', 'tosh village', 'tosh himachal',
+  'parvati valley', 'parvati valley trip', 'parvati valley itinerary', 'parvati valley villages',
+  'kheerganga trek', 'kheerganga trek distance', 'kheerganga hot spring', 'barshaini',
+  'manikaran', 'manikaran hot springs', 'malana village',
+  'himachal mountain stay', 'himalayan village stay', 'kasol camping', 'kalga pulga tosh trip',
   // Munnar camping (money cluster)
   'best camps in munnar', 'top camps in munnar', 'top camp stays in munnar', 'best camp stays in munnar',
   'top 10 camps in munnar', 'best campsites in munnar', 'top rated camps in munnar', 'top camping sites in munnar',

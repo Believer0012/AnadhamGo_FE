@@ -73,8 +73,14 @@ export default function CampsDirectoryClient({
             console.error('Error reading wishlist from localStorage:', e);
         }
 
+        // Re-read local data only. Re-fetching here looped forever: saveAllCamps() above
+        // dispatches 'storage', which re-triggered the fetch (~50 requests/second).
         const handleStorage = () => {
-            refreshCamps();
+            const local = getAllCamps();
+            setCamps(prev => (JSON.stringify(prev) === JSON.stringify(local) ? prev : local));
+            try {
+                setWishlist(JSON.parse(localStorage.getItem('aanandham_user_wishlist') || '[]'));
+            } catch (e) {}
         };
 
         window.addEventListener('storage', handleStorage);
@@ -197,7 +203,7 @@ export default function CampsDirectoryClient({
             {/* ── HEADER ── */}
             <SiteHeader transparentOnTop={false} activePage="camps" />
 
-            <main style={{ paddingBottom: '120px' }}>
+            <main id="main-content" style={{ paddingBottom: '120px' }}>
 
                 {/* ── HERO BANNER ── */}
                 <section style={{

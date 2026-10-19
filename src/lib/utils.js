@@ -52,13 +52,16 @@ export const generateBookingId = () => {
   const timePart = Date.now().toString(36).toUpperCase();
   let randPart = '';
   try {
-    if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+    // Web Crypto exists in every browser and in Node ≥19. Deliberately no require('crypto'):
+    // that pulled a ~430 KB Node crypto polyfill into every page's client bundle.
+    // (Server booking IDs are generated in the API routes, not here.)
+    const webCrypto = globalThis.crypto;
+    if (webCrypto && webCrypto.getRandomValues) {
       const arr = new Uint8Array(3);
-      window.crypto.getRandomValues(arr);
+      webCrypto.getRandomValues(arr);
       randPart = Array.from(arr, b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
     } else {
-      const crypto = require('crypto');
-      randPart = crypto.randomBytes(3).toString('hex').toUpperCase();
+      randPart = Math.random().toString(36).substring(2, 8).toUpperCase();
     }
   } catch {
     randPart = Math.random().toString(36).substring(2, 8).toUpperCase();

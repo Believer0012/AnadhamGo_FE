@@ -131,12 +131,15 @@ export async function POST(request) {
         }
 
         // 4.2. Authoritative Live Email Verification (MX Record & Disposable Filter)
-        const emailVerification = await verifyEmailServer(validation.sanitized.email);
-        if (!emailVerification.isValid) {
-            return NextResponse.json(
-                { success: false, message: emailVerification.message || 'The provided email address is invalid or cannot receive mail.' },
-                { status: 400 }
-            );
+        // Email is optional — only verify when the guest actually supplied one.
+        if (validation.sanitized.email) {
+            const emailVerification = await verifyEmailServer(validation.sanitized.email);
+            if (!emailVerification.isValid) {
+                return NextResponse.json(
+                    { success: false, message: emailVerification.message || 'The provided email address is invalid or cannot receive mail.' },
+                    { status: 400 }
+                );
+            }
         }
 
         // 4.5. Master Delegation: Forward booking creation & Razorpay Order to OpenPMS
@@ -217,7 +220,8 @@ export async function POST(request) {
             room,
             adults,
             children,
-            addonIds: Array.isArray(body.addonIds) ? body.addonIds : []
+            addonIds: Array.isArray(body.addonIds) ? body.addonIds : [],
+            addonQuantities: (body.addonQuantities && typeof body.addonQuantities === 'object') ? body.addonQuantities : {}
         });
         serverTotal = pricing.total > 0 ? pricing.total : serverTotal;
         discountPercent = pricing.discountPercent;

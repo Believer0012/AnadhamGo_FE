@@ -39,11 +39,15 @@ export function validateBookingPayload(body) {
         errors.push('Valid 10-digit mobile or WhatsApp number is required.');
     }
 
-    // 3.5 Email validation (Mandatory, no disposable or fake emails)
+    // 3.5 Email validation — OPTIONAL. Validate the format only when one is supplied
+    // (the WhatsApp-enquiry flow allows a booking with no email; a digital pass is
+    // emailed only when an address is provided).
     const email = (body.email || '').trim().toLowerCase();
-    const emailCheck = validateEmailClient(email);
-    if (!emailCheck.isValid) {
-        errors.push(emailCheck.message || 'A valid email address is mandatory to issue your official digital pass.');
+    if (email) {
+        const emailCheck = validateEmailClient(email);
+        if (!emailCheck.isValid) {
+            errors.push(emailCheck.message || 'Please enter a valid email address, or leave it blank.');
+        }
     }
 
     // 4. Guests count validation

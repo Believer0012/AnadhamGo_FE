@@ -1,4 +1,5 @@
 ﻿import './globals.css';
+import './design-system.css';
 import { Bricolage_Grotesque, Plus_Jakarta_Sans } from 'next/font/google';
 import Script from 'next/script';
 import SmoothScroll from '@/components/SmoothScroll';
@@ -22,40 +23,48 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aanandham.in';
 
+// Site-wide positioning: Himalaya-first discovery (Pulga, Kasol, Parvati Valley),
+// with the live Munnar camps kept as a secondary, still-true signal.
+const SITE_TITLE = 'Aanandham.go — Discover Pulga, Kasol & the Parvati Valley';
+const SITE_DESCRIPTION =
+  'Plan your Himalayan escape to Pulga, Kasol, Kalga, Tosh and Kheerganga — village guides, treks and mountain stays in the Parvati Valley, plus verified camping in Munnar, Kerala.';
+const SITE_OG_IMAGE = 'https://images.unsplash.com/photo-1546180801-a9b3dd6ad440?auto=format&fit=crop&w=1200&h=630&q=80';
+const SITE_OG_ALT = 'The Parvati river flowing through deodar forest beneath snow-capped Himalayan peaks';
+
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
   viewportFit: 'cover',
-  themeColor: '#F8F9F5',
+  themeColor: '#0B150E',
   colorScheme: 'light dark',
 };
 
 export const metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'Aanandham.go — Luxury Camping & Tent Stays in Munnar',
+    default: SITE_TITLE,
     template: '%s | Aanandham.go'
   },
-  description: 'Book verified high-altitude camping, Suryanelli tent stays & 4x4 Kolukkumalai sunrise treks in Munnar, Kerala with Aanandham.go.',
+  description: SITE_DESCRIPTION,
   keywords: SEO_KEYWORDS,
-  authors: [{ name: 'Aanandham Wilderness Platform' }],
+  authors: [{ name: 'Aanandham.go' }],
   creator: 'Aanandham.go',
   publisher: 'Aanandham.go',
   alternates: {
     canonical: 'https://www.aanandham.in',
   },
   openGraph: {
-    title: 'Aanandham.go — Luxury Camping & Tent Stays in Munnar',
-    description: 'Book verified high-altitude camping, Suryanelli tent stays & 4x4 Kolukkumalai sunrise treks in Munnar with Aanandham.go.',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     url: siteUrl,
     siteName: 'Aanandham.go',
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=1200&h=630&q=80',
+        url: SITE_OG_IMAGE,
         width: 1200,
         height: 630,
-        alt: 'Aanandham.go Luxury Wilderness Camping in Munnar',
+        alt: SITE_OG_ALT,
       },
       {
         url: `${siteUrl}/logo.png`,
@@ -69,11 +78,11 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Aanandham.go — Luxury Camping & Tent Stays in Munnar',
-    description: 'Book verified high-altitude camping, Suryanelli tent stays & 4x4 Kolukkumalai sunrise treks with Aanandham.go.',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     creator: '@aanandham_go',
     images: [
-      'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=1200&h=630&q=80',
+      SITE_OG_IMAGE,
       `${siteUrl}/logo.png`
     ],
   },
@@ -110,15 +119,51 @@ export const metadata = {
   } : {}),
 };
 
-const jsonLd = {
-  '@context': 'https://schema.org',
+const SITE_PHONE = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP ? `+${process.env.NEXT_PUBLIC_ADMIN_WHATSAPP}` : '+919074858014';
+const SAME_AS = [
+  'https://www.instagram.com/aanandham.go',
+  'https://www.facebook.com/aanandham.go',
+  'https://twitter.com/aanandham_go',
+  'https://www.linkedin.com/company/aanandhamgo'
+];
+
+// Brand entity: a travel platform serving the Parvati Valley (primary) and Munnar.
+// No street address here — the only physical site with a verified address is the Munnar basecamp below.
+const organizationLd = {
+  '@type': 'TravelAgency',
+  '@id': `${siteUrl}/#organization`,
+  name: 'Aanandham.go',
+  url: siteUrl,
+  logo: `${siteUrl}/logo.png`,
+  image: SITE_OG_IMAGE,
+  description: SITE_DESCRIPTION,
+  telephone: SITE_PHONE,
+  email: 'bookings@aanandham.in',
+  sameAs: SAME_AS,
+  areaServed: [
+    {
+      '@type': 'Place',
+      name: 'Parvati Valley, Himachal Pradesh',
+      url: `${siteUrl}/destinations/parvati-valley`,
+      geo: { '@type': 'GeoCoordinates', latitude: 32.02, longitude: 77.38 }
+    },
+    { '@type': 'Place', name: 'Pulga, Himachal Pradesh', url: `${siteUrl}/destinations/pulga` },
+    { '@type': 'Place', name: 'Kasol, Himachal Pradesh', url: `${siteUrl}/destinations/kasol` },
+    { '@type': 'Place', name: 'Munnar, Kerala', url: `${siteUrl}/destinations/munnar` }
+  ]
+};
+
+
+// The Munnar basecamp, unchanged apart from its @id: the review rating belongs to this physical site.
+const munnarCampgroundLd = {
   '@type': 'Campground',
-  name: 'Aanandham.go Wilderness Camps',
+  name: 'Aanandham.go Wilderness Camps — Munnar',
   image: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=1200&q=80',
   logo: `${siteUrl}/logo.png`,
-  '@id': siteUrl,
-  url: siteUrl,
-  telephone: process.env.NEXT_PUBLIC_ADMIN_WHATSAPP ? `+${process.env.NEXT_PUBLIC_ADMIN_WHATSAPP}` : '+919074858014',
+  '@id': `${siteUrl}/#munnar-basecamp`,
+  url: `${siteUrl}/destinations/munnar`,
+  parentOrganization: { '@id': `${siteUrl}/#organization` },
+  telephone: SITE_PHONE,
   email: 'bookings@aanandham.in',
   priceRange: '₹₹',
   address: {
@@ -150,12 +195,7 @@ const jsonLd = {
       closes: '22:00'
     }
   ],
-  sameAs: [
-    'https://www.instagram.com/aanandham.go',
-    'https://www.facebook.com/aanandham.go',
-    'https://twitter.com/aanandham_go',
-    'https://www.linkedin.com/company/aanandhamgo'
-  ],
+  sameAs: SAME_AS,
   amenityFeature: [
     { '@type': 'LocationFeatureSpecification', name: '4x4 Offroad Mountain Jeep Transfers', value: true },
     { '@type': 'LocationFeatureSpecification', name: 'Private Campfire & Live BBQ Platter', value: true },
@@ -165,6 +205,12 @@ const jsonLd = {
   ],
   aggregateRating: SITE_RATING,
   additionalType: 'https://schema.org/TouristAttraction'
+};
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  // The WebSite entity is emitted by the homepage (page.jsx) and references #organization
+  '@graph': [organizationLd, munnarCampgroundLd]
 };
 
 export default function RootLayout({ children }) {
@@ -182,8 +228,15 @@ export default function RootLayout({ children }) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        {/* Autofill extensions (Edge, LastPass, etc.) inject `fdprocessedid` on buttons/inputs
+            before hydration, causing attribute-mismatch warnings. Strip it as soon as it appears. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var A='fdprocessedid';new MutationObserver(function(m){for(var i=0;i<m.length;i++){if(m[i].attributeName===A)m[i].target.removeAttribute(A);}}).observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:[A]});})();`,
+          }}
+        />
       </head>
-      <body style={{ fontFamily: 'var(--font-jakarta), "Plus Jakarta Sans", sans-serif', backgroundColor: '#F8F9F5', color: '#121613' }}>
+      <body style={{ fontFamily: 'var(--font-jakarta), "Plus Jakarta Sans", sans-serif', backgroundColor: '#F8FAF9', color: '#202522' }}>
         <SmoothScroll />
         {children}
         <GlobalActionHub />

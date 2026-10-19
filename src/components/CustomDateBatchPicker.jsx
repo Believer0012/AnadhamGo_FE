@@ -386,7 +386,7 @@ export default function CustomDateBatchPicker({
                                         justifyContent: 'center'
                                     }}>
                                         {upcomingBatches.map((batch, idx) => {
-                                            const isSelected = selectedDate === batch.title;
+                                            const isSelected = effectiveSelectedDate === batch.title;
                                             const meta = BATCH_DETAILS_META[idx % 6];
                                             const availablePods = meta.totalSlots - meta.bookedSlots;
                                             const IconComp = meta.icon;

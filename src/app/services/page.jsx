@@ -369,7 +369,7 @@ export default function ServicesPage() {
     return (
         <>
             <SiteHeader activePage="services" />
-            <main style={{ overflow: 'hidden', background: '#0B150E', minHeight: '100vh', color: '#FFFFFF' }}>
+            <main id="main-content" style={{ overflow: 'hidden', background: '#0B150E', minHeight: '100vh', color: '#FFFFFF' }}>
 
                 {/* ═══════════════════════════════════════════════════════
                     SECTION 1 [DARK]: HERO SECTION — Atmospheric Munnar Landscape

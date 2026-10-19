@@ -96,7 +96,7 @@ export default async function BlogPostPage({ params }) {
   return (
     <div style={{ fontFamily: 'var(--font-jakarta), "Plus Jakarta Sans", sans-serif', backgroundColor: '#F8F9F5', color: '#121613', minHeight: '100vh' }}>
       <SiteHeader transparentOnTop={false} activePage="blog" />
-      <main style={{ fontFamily: 'var(--font-jakarta), "Plus Jakarta Sans", sans-serif', backgroundColor: '#F8F9F5', color: '#121613', minHeight: '100vh' }}>
+      <main id="main-content" style={{ fontFamily: 'var(--font-jakarta), "Plus Jakarta Sans", sans-serif', backgroundColor: '#F8F9F5', color: '#121613', minHeight: '100vh' }}>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
@@ -160,7 +160,7 @@ export default async function BlogPostPage({ params }) {
                 </span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px' }}>
                   <MapPin size={15} color="#D5ED55" />
-                  Munnar, Kerala
+                  {post.region === 'himalaya' ? 'Parvati Valley, Himachal' : 'Munnar, Kerala'}
                 </span>
               </div>
             </div>
@@ -178,7 +178,7 @@ export default async function BlogPostPage({ params }) {
               <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(21px, 2.6vw, 27px)', fontWeight: '800', margin: '0 0 14px', color: '#121613', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
                 {sec.h2}
               </h2>
-              {sec.paragraphs.map((p, j) => (
+              {(sec.paragraphs || []).map((p, j) => (
                 <p key={j} style={{ fontSize: '15.5px', lineHeight: 1.75, color: '#2A312C', margin: '0 0 16px' }}>
                   {p}
                 </p>
@@ -193,7 +193,7 @@ export default async function BlogPostPage({ params }) {
               {sec.internalLinks && (
                 <div style={{ background: '#FFFFFF', border: '1px solid rgba(18,22,19,0.1)', borderRadius: '14px', padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '18px' }}>
                   <div style={{ fontSize: '11px', fontWeight: '900', color: '#166534', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                    Related Camps
+                    {post.region === 'himalaya' ? 'Related' : 'Related Camps'}
                   </div>
                   {sec.internalLinks.map((link, k) => (
                     <Link key={k} href={link.href} style={{ color: '#166534', fontWeight: '800', fontSize: '14.5px', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
@@ -227,11 +227,21 @@ export default async function BlogPostPage({ params }) {
               <div style={{ fontFamily: 'var(--font-heading)', fontSize: '20px', fontWeight: '800', color: '#FFFFFF', margin: '0 0 4px' }}>
                 Ready to book this trip?
               </div>
-              <p style={{ fontSize: '13.5px', color: '#A2B6A6', margin: '0' }}>Verified camps, real coordinators, no-surprise pricing.</p>
+              <p style={{ fontSize: '13.5px', color: '#A2B6A6', margin: '0' }}>
+                {post.region === 'himalaya'
+                  ? 'Build a day-by-day plan for the valley and send it to us to book.'
+                  : 'Verified camps, real coordinators, no-surprise pricing.'}
+              </p>
             </div>
-            <Link href="/camps" className="btn-lime" style={{ padding: '13px 28px', fontSize: '14px', fontWeight: '900', textDecoration: 'none', borderRadius: '999px' }}>
-              Browse Camps →
-            </Link>
+            {post.region === 'himalaya' ? (
+              <Link href="/plan" className="btn-lime" style={{ padding: '13px 28px', fontSize: '14px', fontWeight: '900', textDecoration: 'none', borderRadius: '999px' }}>
+                Plan this trip →
+              </Link>
+            ) : (
+              <Link href="/camps" className="btn-lime" style={{ padding: '13px 28px', fontSize: '14px', fontWeight: '900', textDecoration: 'none', borderRadius: '999px' }}>
+                Browse Camps →
+              </Link>
+            )}
           </div>
         </section>
 
@@ -239,7 +249,7 @@ export default async function BlogPostPage({ params }) {
         <section style={{ padding: '0 clamp(20px, 4vw, 48px) 90px', maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
             <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: '800', margin: '0', color: '#121613', letterSpacing: '-0.02em' }}>
-              More <span style={{ color: '#E5A93B' }}>Field Guides</span>
+              More <span style={{ color: '#e5a93b' }}>Field Guides</span>
             </h2>
             <Link href="/blog" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13.5px', fontWeight: '800', color: '#166534', textDecoration: 'none' }}>
               View all guides <ArrowRight size={15} />

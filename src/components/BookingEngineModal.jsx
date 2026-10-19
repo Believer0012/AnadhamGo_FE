@@ -13,6 +13,11 @@ import ErrorBoundary from './ErrorBoundary';
 
 // Submodules
 import { ROW_GAP_10, parseRoomCapacity, ADDONS_LIST } from './booking/BookingConstants';
+import { ADDON_CATALOG, addonCost, gstIncludedAmount, GST_RATE } from '@/lib/pricing';
+import BookingSummary from './booking/BookingSummary';
+import { BK, ctaStyle, ghostStyle } from './booking/bookingUI';
+import { WhatsAppIcon } from './common/BrandIcons';
+import { ArrowRight } from 'lucide-react';
 import BookingWizardHeader from './booking/BookingWizardHeader';
 import Step1CampsiteLodging from './booking/Step1CampsiteLodging';
 import Step2AddonsActivities from './booking/Step2AddonsActivities';
@@ -60,7 +65,8 @@ function BookingEngineModalInner({
     const [children, setChildren] = useState(initialChildren || 0);
     const [customUnits, setCustomUnits] = useState(initialCustomUnits || null);
     const [selectedAddons, setSelectedAddons] = useState([]);
-    
+    const [addonQuantities, setAddonQuantities] = useState({}); // quantity-type add-ons: { id: count }
+
     // Explorer Details
     const [customerName, setCustomerName] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
@@ -163,6 +169,7 @@ function BookingEngineModalInner({
             setValidationError('');
             setConfirmedPass(null);
             setSelectedAddons([]);
+            setAddonQuantities({});
 
             if (initialDate) {
                 setTravelDate(initialDate);
@@ -277,12 +284,20 @@ function BookingEngineModalInner({
     }, [selectedRoom, selectedPkg, initialRoom, initialPackage, adults, children]);
 
     const addonsAmount = useMemo(() => {
-        return selectedAddons.reduce((sum, addonId) => {
-            const addon = ADDONS_LIST.find(a => a.id === addonId);
+        // flat / per-person toggles
+        const toggles = selectedAddons.reduce((sum, addonId) => {
+            const addon = ADDON_CATALOG[addonId];
             if (!addon) return sum;
-            return sum + (addon.perPerson ? addon.price * adults : addon.price);
+            return sum + addonCost(addon, { totalGuests });
         }, 0);
-    }, [selectedAddons, adults]);
+        // quantity counters
+        const counters = Object.entries(addonQuantities).reduce((sum, [id, qty]) => {
+            const addon = ADDON_CATALOG[id];
+            if (!addon || !qty) return sum;
+            return sum + addonCost(addon, { quantity: qty });
+        }, 0);
+        return toggles + counters;
+    }, [selectedAddons, addonQuantities, totalGuests]);
 
     const rawTotal = Math.max(0, baseLodgingAmount + addonsAmount);
 
@@ -302,6 +317,36 @@ function BookingEngineModalInner({
     const totalAmount = Math.max(100, Number(discountSummary?.discountedTotal ?? rawTotal) || Number(rawTotal) || 2499);
     const advanceAmount = Math.round(totalAmount * 0.3);
     const balanceAmount = Math.max(0, totalAmount - advanceAmount);
+    // GST is shown inclusive (the tax portion already baked into totalAmount)
+    const gstAmount = gstIncludedAmount(totalAmount);
+
+    // Meals: a single veg counter drives non-veg = campers − veg (kept in sync for the payload)
+    useEffect(() => {
+        const clampedVeg = Math.min(Math.max(0, vegCount), totalGuests);
+        if (clampedVeg !== vegCount) setVegCount(clampedVeg);
+        const derivedNonVeg = Math.max(0, totalGuests - clampedVeg);
+        if (derivedNonVeg !== nonVegCount) setNonVegCount(derivedNonVeg);
+    }, [totalGuests, vegCount, nonVegCount]);
+
+    // Price line items for the shared summary aside
+    const summaryLineItems = useMemo(() => {
+        const items = [];
+        const ratePerPerson = Number(baseLodgingAmount && adults ? Math.round(baseLodgingAmount / (adults + 0.5 * children)) : (selectedRoom?.price || selectedPkg?.price || 2499));
+        items.push({ label: `Stay · ${adults} × ${inr(ratePerPerson)}`, amount: baseLodgingAmount });
+        const disc = discountSummary?.discountAmount || 0;
+        if (disc > 0) items.push({ label: discountSummary?.discountLabel || 'Discount', amount: -disc, tone: 'discount' });
+        selectedAddons.forEach((id) => {
+            const a = ADDON_CATALOG[id];
+            if (!a) return;
+            items.push({ label: a.name, amount: addonCost(a, { totalGuests }) });
+        });
+        Object.entries(addonQuantities).forEach(([id, qty]) => {
+            const a = ADDON_CATALOG[id];
+            if (!a || !qty) return;
+            items.push({ label: `${a.name} × ${qty}`, amount: qty * a.price });
+        });
+        return items;
+    }, [baseLodgingAmount, adults, children, selectedRoom, selectedPkg, discountSummary, selectedAddons, addonQuantities, totalGuests]);
 
     const currentStepPrice = useMemo(() => {
         if (step === 1) return baseLodgingAmount;
@@ -349,11 +394,8 @@ function BookingEngineModalInner({
             setValidationError('Please enter a valid 10-digit mobile / WhatsApp number.');
             return;
         }
-        if (!customerEmail.trim()) {
-            setValidationError('Email address is mandatory. Please enter your email to receive your official digital pass.');
-            return;
-        }
-        if (!isValidEmailAddress(customerEmail)) {
+        // Email is optional — validate format only when one is provided
+        if (customerEmail.trim() && !isValidEmailAddress(customerEmail)) {
             setValidationError('Invalid email format. Please enter a valid email address with domain (e.g. yourname@gmail.com).');
             return;
         }
@@ -387,6 +429,8 @@ function BookingEngineModalInner({
                     children,
                     roomType: selectedRoom?.name || 'Standard Tent',
                     addons: selectedAddons,
+                    addonIds: selectedAddons,
+                    addonQuantities,
                     total: totalAmount,
                     paidAmount: amountToCharge,
                     balanceDue: totalAmount - amountToCharge,
@@ -407,8 +451,20 @@ function BookingEngineModalInner({
             }
 
             const rzpOrder = orderData.order || orderData.razorpayOrder || {};
-            const orderKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || orderData.keyId || orderData.razorpayKeyId || 'rzp_test_placeholder';
+            // Use the key the ORDER was created with (server-authoritative) so Checkout's
+            // key_id always matches the order — a mismatch here is what triggers a 401 on
+            // Razorpay's /preferences call. The public env var is only a last-resort fallback.
+            const orderKey = orderData.keyId || orderData.razorpayKeyId || rzpOrder.key_id || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '';
             const bookingRefId = orderData.bookingId || orderData.booking?.id;
+
+            // No real gateway configured (dev mock order or missing key): don't open a broken
+            // Checkout — guide the guest to the WhatsApp enquiry instead.
+            const isMockOrder = !rzpOrder.id || String(rzpOrder.id).startsWith('order_dev_') || rzpOrder.mock === true;
+            if (isMockOrder || !orderKey || orderKey === 'rzp_test_placeholder') {
+                setIsSubmitting(false);
+                setValidationError('Online payment isn’t available in this environment yet. Please tap “Send on WhatsApp” to reserve — our team will confirm and collect payment.');
+                return;
+            }
 
             if (!window.Razorpay) {
                 await new Promise((resolve, reject) => {
@@ -530,7 +586,11 @@ function BookingEngineModalInner({
     const handleDirectWhatsAppBooking = () => {
         const amountToPayNow = paymentMode === 'advance' ? advanceAmount : totalAmount;
         const balDue = paymentMode === 'advance' ? balanceAmount : 0;
-        const addonsListText = selectedAddons && selectedAddons.length > 0 ? selectedAddons.join(', ') : 'None';
+        const addonNamesForMsg = [
+            ...selectedAddons.map(id => ADDON_CATALOG[id]?.name).filter(Boolean),
+            ...Object.entries(addonQuantities).filter(([, q]) => q > 0).map(([id, q]) => `${ADDON_CATALOG[id]?.name || id} × ${q}`)
+        ];
+        const addonsListText = addonNamesForMsg.length > 0 ? addonNamesForMsg.join(', ') : 'None';
         const cleanDates = String(travelDate || '').replace(/–/g, '-');
 
         const msg = `*Aanandham Wilderness — Campsite Booking & Permit Inquiry*
@@ -594,187 +654,204 @@ _Hi Aanandham Basecamp Concierge! Please check availability and confirm permit d
 
     if (!isOpen || !mounted || typeof document === 'undefined' || !document.body) return null;
 
-    return createPortal(
-        <div
-            className="booking-modal-overlay"
-            style={{
-                position: 'fixed',
-                inset: 0,
-                zIndex: 100005,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '16px',
-                background: 'rgba(10, 15, 12, 0.8)',
-                backdropFilter: 'blur(8px)',
-                WebkitBackdropFilter: 'blur(8px)'
-            }}
-            onClick={(e) => {
-                if (e.target === e.currentTarget) onClose();
-            }}
-        >
-            <motion.div
-                ref={modalRef}
-                className="booking-modal-container"
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                style={{
-                    width: '100%',
-                    maxWidth: '820px',
-                    maxHeight: '92vh',
-                    borderRadius: '24px',
-                    background: '#FFFFFF',
-                    boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.05)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    overflow: 'hidden'
-                }}
-                onWheel={(e) => e.stopPropagation()}
-                onTouchMove={(e) => e.stopPropagation()}
-            >
-                {/* Header & Step Tracker */}
-                <BookingWizardHeader
-                    step={step}
-                    setStep={setStep}
-                    confirmedPass={confirmedPass}
-                    validationError={validationError}
-                    setValidationError={setValidationError}
-                    onClose={onClose}
-                />
+    // ── Shared summary data (drives the desktop aside + mobile bottom bar) ──
+    const guestLine = `${adults} ${adults === 1 ? 'adult' : 'adults'}${children ? `, ${children} ${children === 1 ? 'kid' : 'kids'}` : ''}`;
+    const unitLine = `${totalUnits} × ${selectedRoom?.name || 'Tent'}`;
+    const summaryRows = [
+        { label: 'Dates', value: travelDate },
+        { label: 'Guests', value: guestLine },
+        { label: 'Stay', value: unitLine },
+    ];
+    if (step >= 3) summaryRows.push({ label: 'Meals', value: `${vegCount} veg · ${nonVegCount} non-veg` });
+    const includedList = (Array.isArray(selectedPkg?.inclusions) && selectedPkg.inclusions.length)
+        ? selectedPkg.inclusions.slice(0, 3)
+        : ['Sunrise 4×4 jeep to the ridge', 'Campfire BBQ dinner & breakfast', 'Guided trek & forest permits'];
+    const barSummaryText = `${travelDate} · ${guestLine}`;
+    const hasAddons = selectedAddons.length > 0 || Object.values(addonQuantities).some(Boolean);
 
-                {/* Content Container */}
-                <div
-                    className="booking-modal-body booking-modal-scroll"
-                    style={{
-                        flex: 1,
-                        overflowY: 'auto',
-                        overscrollBehavior: 'contain',
-                        WebkitOverflowScrolling: 'touch',
-                        touchAction: 'pan-y',
-                        padding: 'clamp(14px, 3vw, 24px) clamp(14px, 3vw, 24px) clamp(16px, 3vw, 24px)'
-                    }}
+    const stepFooter = step === 4 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+            <button type="button" onClick={handleDirectWhatsAppBooking} style={{ ...ctaStyle, width: '100%' }}>
+                <WhatsAppIcon size={18} /> Send on WhatsApp
+            </button>
+            <button type="button" disabled={isSubmitting} onClick={handleRazorpayCheckout} style={{ ...ghostStyle, width: '100%', justifyContent: 'center', opacity: isSubmitting ? 0.6 : 1 }}>
+                {isSubmitting ? 'Processing…' : 'Pay now'}
+            </button>
+        </div>
+    ) : (() => {
+        const map = {
+            1: { back: null, label: 'Continue to add-ons', on: handleStep1Next },
+            2: { back: () => setStep(1), label: hasAddons ? 'Continue' : 'Skip add-ons', on: () => setStep(3) },
+            3: { back: () => setStep(2), label: 'Review booking', on: handleStep3Next },
+        };
+        const n = map[step] || map[1];
+        return (
+            <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+                {n.back && <button type="button" onClick={n.back} style={{ ...ghostStyle, padding: '0 18px' }}>Back</button>}
+                <button type="button" onClick={n.on} style={{ ...ctaStyle, flexGrow: 1 }}>{n.label} <ArrowRight size={17} /></button>
+            </div>
+        );
+    })();
+
+    return createPortal(
+        <>
+            <style>{`
+                .bk-body{display:flex;min-height:0;flex:1;}
+                .bk-left{flex:1 1 auto;min-width:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:20px 24px 28px;}
+                .bk-aside-wrap{display:flex;}
+                .bk-bar-wrap{display:none;}
+                @media (max-width:767px){
+                    .booking-modal-overlay{align-items:flex-end !important;padding:0 !important;}
+                    .booking-modal-container{max-width:100% !important;height:100% !important;max-height:100% !important;border-radius:20px 20px 0 0 !important;}
+                    .bk-body{flex-direction:column;}
+                    .bk-left{padding:18px 16px 20px;}
+                    .bk-aside-wrap{display:none;}
+                    .bk-bar-wrap{display:block;}
+                }
+            `}</style>
+            <div
+                className="booking-modal-overlay"
+                style={{ position: 'fixed', inset: 0, zIndex: 100005, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', background: 'rgba(10, 15, 12, 0.8)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+                onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+            >
+                <motion.div
+                    ref={modalRef}
+                    className="booking-modal-container"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="booking-modal-title"
+                    initial={{ opacity: 0, scale: 0.97, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.97, y: 20 }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                    style={{ width: '100%', maxWidth: '960px', height: '720px', maxHeight: '90vh', borderRadius: BK.radiusModal, background: '#FFFFFF', boxShadow: '0 25px 60px -15px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+                    onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
                     onWheel={(e) => e.stopPropagation()}
                     onTouchMove={(e) => e.stopPropagation()}
                 >
-                    {step === 1 && (
-                        <Step1CampsiteLodging
-                            campsList={campsList}
-                            selectedPkgId={selectedPkgId}
-                            setSelectedPkgId={setSelectedPkgId}
-                            customUnits={customUnits}
-                            setCustomUnits={setCustomUnits}
-                            selectedRoomId={selectedRoomId}
-                            setSelectedRoomId={setSelectedRoomId}
-                            selectedPkg={selectedPkg}
-                            travelDate={travelDate}
-                            setTravelDate={setTravelDate}
-                            adults={adults}
-                            setAdults={setAdults}
-                            children={children}
-                            setChildren={setChildren}
-                            totalGuests={totalGuests}
-                            selectedRoom={selectedRoom}
-                            autoRequiredUnits={autoRequiredUnits}
-                            totalUnits={totalUnits}
-                            totalRoomCapacity={totalRoomCapacity}
-                            currentStepPrice={currentStepPrice}
-                            handleStep1Next={handleStep1Next}
-                            discountLabel={discountSummary?.appliedDiscounts?.[0]?.name || discountSummary?.label || ''}
-                            setValidationError={setValidationError}
-                        />
-                    )}
+                    <BookingWizardHeader
+                        step={step}
+                        setStep={setStep}
+                        confirmedPass={confirmedPass}
+                        validationError={validationError}
+                        setValidationError={setValidationError}
+                        campTitle={selectedPkg?.shortTitle || selectedPkg?.title}
+                        campLocation={selectedPkg?.location || selectedPkg?.region}
+                        altitude={selectedPkg?.altitude}
+                        campImage={selectedPkg?.image}
+                        onClose={onClose}
+                    />
 
-                    {step === 2 && (
-                        <Step2AddonsActivities
-                            selectedAddons={selectedAddons}
-                            toggleAddon={toggleAddon}
-                            adults={adults}
-                            children={children}
-                            totalGuests={totalGuests}
-                            currentStepPrice={currentStepPrice}
-                            selectedPkg={selectedPkg}
-                            selectedRoom={selectedRoom}
-                            baseLodgingAmount={baseLodgingAmount}
-                            addonsAmount={addonsAmount}
-                            totalAmount={totalAmount}
-                            discountSummary={discountSummary}
-                            discountLabel={discountSummary?.appliedDiscounts?.[0]?.name || discountSummary?.label || ''}
-                            setStep={setStep}
-                        />
-                    )}
+                    {step === 5 ? (
+                        <div className="booking-modal-body booking-modal-scroll" style={{ flex: 1, overflowY: 'auto', padding: 'clamp(14px, 3vw, 24px)' }}>
+                            {confirmedPass && (
+                                <Step5ConfirmationPass
+                                    confirmedPass={confirmedPass}
+                                    handleSharePassToWhatsApp={handleSharePassToWhatsApp}
+                                    onClose={onClose}
+                                />
+                            )}
+                        </div>
+                    ) : (
+                        <div className="bk-body">
+                            <div className="bk-left" onWheel={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()}>
+                                {step === 1 && (
+                                    <Step1CampsiteLodging
+                                        campsList={campsList}
+                                        selectedPkgId={selectedPkgId}
+                                        setSelectedPkgId={setSelectedPkgId}
+                                        customUnits={customUnits}
+                                        setCustomUnits={setCustomUnits}
+                                        selectedRoomId={selectedRoomId}
+                                        setSelectedRoomId={setSelectedRoomId}
+                                        selectedPkg={selectedPkg}
+                                        travelDate={travelDate}
+                                        setTravelDate={setTravelDate}
+                                        adults={adults}
+                                        setAdults={setAdults}
+                                        children={children}
+                                        setChildren={setChildren}
+                                        totalGuests={totalGuests}
+                                        selectedRoom={selectedRoom}
+                                        totalUnits={totalUnits}
+                                        roomCapacity={roomCapacity}
+                                        setValidationError={setValidationError}
+                                    />
+                                )}
+                                {step === 2 && (
+                                    <Step2AddonsActivities
+                                        selectedAddons={selectedAddons}
+                                        toggleAddon={toggleAddon}
+                                        addonQuantities={addonQuantities}
+                                        setAddonQuantities={setAddonQuantities}
+                                        totalGuests={totalGuests}
+                                    />
+                                )}
+                                {step === 3 && (
+                                    <Step3CamperContact
+                                        customerName={customerName}
+                                        setCustomerName={setCustomerName}
+                                        customerPhone={customerPhone}
+                                        setCustomerPhone={setCustomerPhone}
+                                        customerEmail={customerEmail}
+                                        setCustomerEmail={setCustomerEmail}
+                                        specialNotes={specialNotes}
+                                        setSpecialNotes={setSpecialNotes}
+                                        dietaryChoice={dietaryChoice}
+                                        setDietaryChoice={setDietaryChoice}
+                                        vegCount={vegCount}
+                                        setVegCount={setVegCount}
+                                        nonVegCount={nonVegCount}
+                                        totalGuests={totalGuests}
+                                        honeypot={honeypot}
+                                        setHoneypot={setHoneypot}
+                                    />
+                                )}
+                                {step === 4 && (
+                                    <Step4PaymentGateway
+                                        selectedPkg={selectedPkg}
+                                        selectedRoom={selectedRoom}
+                                        travelDate={travelDate}
+                                        adults={adults}
+                                        children={children}
+                                        totalGuests={totalGuests}
+                                        totalUnits={totalUnits}
+                                        vegCount={vegCount}
+                                        nonVegCount={nonVegCount}
+                                        customerName={customerName}
+                                        customerPhone={customerPhone}
+                                        selectedAddons={selectedAddons}
+                                        addonQuantities={addonQuantities}
+                                        totalAmount={totalAmount}
+                                        setStep={setStep}
+                                    />
+                                )}
+                            </div>
 
-                    {step === 3 && (
-                        <Step3CamperContact
-                            customerName={customerName}
-                            setCustomerName={setCustomerName}
-                            customerPhone={customerPhone}
-                            setCustomerPhone={setCustomerPhone}
-                            customerEmail={customerEmail}
-                            setCustomerEmail={setCustomerEmail}
-                            specialNotes={specialNotes}
-                            setSpecialNotes={setSpecialNotes}
-                            dietaryChoice={dietaryChoice}
-                            setDietaryChoice={setDietaryChoice}
-                            vegCount={vegCount}
-                            setVegCount={setVegCount}
-                            nonVegCount={nonVegCount}
-                            setNonVegCount={setNonVegCount}
-                            adults={adults}
-                            children={children}
-                            totalGuests={totalGuests}
-                            currentStepPrice={currentStepPrice}
-                            honeypot={honeypot}
-                            setHoneypot={setHoneypot}
-                            handleStep3Next={handleStep3Next}
-                            handleDirectWhatsAppBooking={handleDirectWhatsAppBooking}
-                            setStep={setStep}
-                            setValidationError={setValidationError}
-                        />
-                    )}
+                            <div className="bk-aside-wrap">
+                                <BookingSummary
+                                    variant="aside"
+                                    rows={summaryRows}
+                                    lineItems={summaryLineItems}
+                                    gstAmount={gstAmount}
+                                    gstRate={GST_RATE}
+                                    included={step === 1 ? includedList : []}
+                                    total={totalAmount}
+                                >
+                                    {stepFooter}
+                                </BookingSummary>
+                            </div>
 
-                    {step === 4 && (
-                        <Step4PaymentGateway
-                            selectedPkg={selectedPkg}
-                            selectedRoom={selectedRoom}
-                            travelDate={travelDate}
-                            adults={adults}
-                            children={children}
-                            totalGuests={totalGuests}
-                            totalUnits={totalUnits}
-                            dietaryChoice={dietaryChoice}
-                            vegCount={vegCount}
-                            nonVegCount={nonVegCount}
-                            selectedAddons={selectedAddons}
-                            discounts={discounts}
-                            baseLodgingAmount={baseLodgingAmount}
-                            addonsAmount={addonsAmount}
-                            totalAmount={totalAmount}
-                            advanceAmount={advanceAmount}
-                            balanceAmount={balanceAmount}
-                            paymentMode={paymentMode}
-                            setPaymentMode={setPaymentMode}
-                            paymentSettings={paymentSettings}
-                            payeeName={payeeName}
-                            isSubmitting={isSubmitting}
-                            validationError={validationError}
-                            handleRazorpayCheckout={handleRazorpayCheckout}
-                            handleDirectWhatsAppBooking={handleDirectWhatsAppBooking}
-                            setStep={setStep}
-                        />
+                            <div className="bk-bar-wrap">
+                                <BookingSummary variant="bar" total={totalAmount} barSummary={barSummaryText}>
+                                    {stepFooter}
+                                </BookingSummary>
+                            </div>
+                        </div>
                     )}
-
-                    {step === 5 && confirmedPass && (
-                        <Step5ConfirmationPass
-                            confirmedPass={confirmedPass}
-                            handleSharePassToWhatsApp={handleSharePassToWhatsApp}
-                            onClose={onClose}
-                        />
-                    )}
-                </div>
-            </motion.div>
-        </div>,
+                </motion.div>
+            </div>
+        </>,
         document.body
     );
 }

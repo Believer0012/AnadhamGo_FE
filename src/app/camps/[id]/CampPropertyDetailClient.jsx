@@ -23,6 +23,12 @@ import { inr, getDefaultUpcomingBatch } from '../../../lib/utils';
 import { waLink, logWhatsAppInquiry } from '../../../lib/whatsapp';
 import { CANCELLATION_TIERS } from '../../../lib/cancellation';
 import { loadDiscountsFromStorage, applyDiscounts } from '../../../lib/discountsCore';
+import { useWishlist } from '../../../hooks/useWishlist';
+import { toBookingDateLabel, fromBookingDateLabel } from '../../../lib/tripIntent';
+import { useTripIntent } from '../../../hooks/useTripIntent';
+import TripDatesBar from '../../../components/common/TripDatesBar';
+import PropertyExtras from '../../../components/property/PropertyExtras';
+import SwipeGallery from '../../../components/property/SwipeGallery';
 
 export function parseRoomCapacity(capacityStr) {
     if (!capacityStr) return 2;
@@ -44,6 +50,41 @@ export default function CampPropertyDetailClient({ campId, initialCamp, initialA
     const [customUnits, setCustomUnits] = useState(null);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
     const [discounts, setDiscounts] = useState(null);
+    const { toggle: toggleWishlist } = useWishlist();
+    const [tripFromSearch, setTripFromSearch] = useState(null);
+    const [trip, setTrip] = useTripIntent();
+    const tripSeenRef = React.useRef(false);
+
+    // Carry dates/guests from the search (and the dates bar above) into this booking card
+    useEffect(() => {
+        if (!trip) return;
+        const label = toBookingDateLabel(trip.checkin, trip.checkout);
+        if (label) {
+            // Keep the batch title the picker already shows when it's the same stay
+            setSelectedDate((prev) => {
+                const cur = fromBookingDateLabel(prev);
+                return cur && cur.checkin === trip.checkin && cur.checkout === (trip.checkout || cur.checkout) ? prev : label;
+            });
+        }
+        if (trip.guests) setGuestsCount(Math.max(1, Math.min(20, trip.guests)));
+        if (!tripSeenRef.current) {
+            tripSeenRef.current = true;
+            setTripFromSearch({ label, guests: trip.guests });
+        }
+    }, [trip]);
+
+    // Card edits flow back to the shared trip so the dates bar and other pages follow along
+    const changeDate = (label) => {
+        setSelectedDate(label);
+        setTripFromSearch(null);
+        const dates = fromBookingDateLabel(label);
+        if (dates) setTrip(dates);
+    };
+    const changeGuests = (next) => {
+        setGuestsCount(next);
+        setCustomUnits(null);
+        setTrip({ guests: next });
+    };
 
     // Load active discount campaigns (server authoritative, localStorage fallback)
     useEffect(() => {
@@ -63,7 +104,8 @@ export default function CampPropertyDetailClient({ campId, initialCamp, initialA
     const toastTimerRef = React.useRef(null);
 
     useEffect(() => {
-        const refreshCampData = async () => {
+        // Local (localStorage) read — cheap, safe to repeat on every 'storage' event
+        const syncFromLocal = () => {
             const campsList = getAllCamps();
             setAllCamps(campsList);
             let currentCamp = getCampById(campId) || initialCamp;
@@ -71,6 +113,13 @@ export default function CampPropertyDetailClient({ campId, initialCamp, initialA
             if (currentCamp?.rooms && currentCamp.rooms.length > 0) {
                 setSelectedRoomId(prev => prev || currentCamp.rooms[0].id);
             }
+        };
+
+        // Server fetch — once per page load. It must NOT run from the 'storage' listener:
+        // saveAllCamps() dispatches 'storage', which previously re-triggered this fetch in an
+        // endless loop (~50 requests/second to /api/admin/camps for every open property page).
+        const refreshCampData = async () => {
+            syncFromLocal();
 
             try {
                 const res = await fetch('/api/admin/camps');
@@ -100,7 +149,7 @@ export default function CampPropertyDetailClient({ campId, initialCamp, initialA
         setIsLoaded(true);
 
         const handleStorage = () => {
-            refreshCampData();
+            syncFromLocal();
         };
         window.addEventListener('storage', handleStorage);
 
@@ -112,19 +161,10 @@ export default function CampPropertyDetailClient({ campId, initialCamp, initialA
 
     const handleToggleWishlist = () => {
         if (!camp) return;
-        let updated;
-        const isLiked = wishlist.includes(camp.id);
-        if (isLiked) {
-            updated = wishlist.filter(id => id !== camp.id);
-            setShareToast(`Removed "${camp.title}" from your wishlist`);
-        } else {
-            updated = [...wishlist, camp.id];
-            setShareToast(`❤️ Added "${camp.title}" to your saved wishlist!`);
-        }
-        setWishlist(updated);
-        try {
-            localStorage.setItem('aanandham_user_wishlist', JSON.stringify(updated));
-        } catch (e) {}
+        // Shared wishlist store keeps the header count and other pages in sync
+        const nowSaved = toggleWishlist(camp.id);
+        setWishlist(nowSaved ? [...wishlist, camp.id] : wishlist.filter(id => id !== camp.id));
+        setShareToast(nowSaved ? `❤️ Added "${camp.title}" to your saved wishlist!` : `Removed "${camp.title}" from your wishlist`);
         if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
         toastTimerRef.current = setTimeout(() => setShareToast(''), 3000);
     };
@@ -382,7 +422,7 @@ return (
     {/* ── HEADER ── */}
     <SiteHeader transparentOnTop={false} activePage="camps" />
 
-            <main style={{ paddingBottom: '120px' }}>
+            <main id="main-content" style={{ paddingBottom: '120px' }}>
                 
                 {/* ── BREADCRUMB & TITLE BAR ── */}
                 <section className="camp-hero" style={{ background: '#101E13', color: '#FFFFFF', padding: 'clamp(105px, 11vw, 130px) clamp(20px, 4vw, 48px) clamp(34px, 4vw, 46px)' }}>
@@ -400,11 +440,16 @@ return (
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
                             <div>
                                 <div className="camp-hero-badges" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                                    <span className="camp-hero-badge" style={{ background: '#E5A93B', color: '#0B150E', fontSize: '12px', fontWeight: '900', padding: '5px 14px', borderRadius: '999px', letterSpacing: '0.3px', boxShadow: '0 2px 8px rgba(229,169,59,0.3)' }}>
-                                        {camp.altitude || 'Western Ghats'}
-                                    </span>
+                                    {camp.altitude ? (
+                                        <span className="camp-hero-badge" style={{ background: '#E5A93B', color: '#0B150E', fontSize: '12px', fontWeight: '900', padding: '5px 14px', borderRadius: '999px', letterSpacing: '0.3px', boxShadow: '0 2px 8px rgba(229,169,59,0.3)' }}>
+                                            {camp.altitude}
+                                        </span>
+                                    ) : null}
+                                    {/* Only real review data — never a placeholder rating or count */}
                                     <span className="camp-hero-badge" style={{ background: 'rgba(213, 237, 85, 0.2)', color: '#D5ED55', fontSize: '12px', fontWeight: '800', padding: '5px 14px', borderRadius: '999px', border: '1px solid rgba(213, 237, 85, 0.4)' }}>
-                                        ★ {camp.rating || '4.98'} ({camp.reviewsCount || 342} verified campers)
+                                        {camp.rating && camp.reviewsCount
+                                            ? `★ ${camp.rating} (${camp.reviewsCount} verified campers)`
+                                            : 'New listing'}
                                     </span>
                                     {camp.tag && (
                                         <span className="camp-hero-badge" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: '800', padding: '5px 12px', borderRadius: '999px', border: '1px solid rgba(255,255,255,0.18)' }}>
@@ -418,19 +463,27 @@ return (
                                 </h1>
 
                                 <div className="camp-hero-info" style={{ display: 'flex', alignItems: 'center', gap: '20px', fontSize: '14px', color: '#C5D8C8', flexWrap: 'wrap', fontWeight: '600' }}>
-                                    <span style={ROW_GAP_6}>
-                                        <MapPin size={16} color="#D5ED55" />
-                                        <span>{camp.location || 'Suryanelli, Munnar'}</span>
-                                    </span>
-                                    <span style={ROW_GAP_6}>
-                                        <Clock size={16} color="#D5ED55" />
-                                        <span>{camp.duration || '2 Days / 1 Night'}</span>
-                                    </span>
-                                    <span style={ROW_GAP_6}>
-                                        <Compass size={16} color="#D5ED55" />
-                                        <span>{camp.difficulty || 'Easy - Moderate Expedition'}</span>
-                                    </span>
+                                    {/* Show only what the listing actually specifies (no Munnar defaults for other regions) */}
+                                    {camp.location || camp.region ? (
+                                        <span style={ROW_GAP_6}>
+                                            <MapPin size={16} color="#D5ED55" />
+                                            <span>{camp.location || camp.region}</span>
+                                        </span>
+                                    ) : null}
+                                    {camp.duration ? (
+                                        <span style={ROW_GAP_6}>
+                                            <Clock size={16} color="#D5ED55" />
+                                            <span>{camp.duration}</span>
+                                        </span>
+                                    ) : null}
+                                    {camp.difficulty ? (
+                                        <span style={ROW_GAP_6}>
+                                            <Compass size={16} color="#D5ED55" />
+                                            <span>{camp.difficulty}</span>
+                                        </span>
+                                    ) : null}
                                 </div>
+                                <TripDatesBar tone="dark" className="camp-hero-dates" />
                             </div>
 
                             {/* Like & Share Action Buttons */}
@@ -484,6 +537,12 @@ return (
 
                 {/* ── PHOTO GALLERY MOSAIC SECTION (RESPONSIVE) ── */}
                 <section style={{ maxWidth: '1440px', margin: '32px auto 0', padding: '0 clamp(20px, 4vw, 48px)' }}>
+                    {/* Mobile: swipeable photo strip (the mosaic below is hidden ≤768px) */}
+                    <SwipeGallery
+                        images={gallery}
+                        title={camp.title}
+                        onOpen={(i) => { setActivePhotoIdx(i); setIsLightboxOpen(true); }}
+                    />
                     <div className="camp-gallery-mosaic">
                         {/* Main Featured Photo (Left Large) */}
                         <div
@@ -579,7 +638,7 @@ return (
                                 {/* Highlights Chips (Lucide Icons) */}
                                 {camp.highlights && camp.highlights.length > 0 && (
                                     <div>
-                                        <h3 style={{ fontSize: '13px', fontWeight: '800', color: '#7D8880', textTransform: 'uppercase', letterSpacing: '0.6px', margin: '0 0 12px' }}>
+                                        <h3 style={{ fontSize: '13px', fontWeight: '800', color: '#5F6B63', textTransform: 'uppercase', letterSpacing: '0.6px', margin: '0 0 12px' }}>
                                             Key Highlights & Experiences
                                         </h3>
                                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -710,7 +769,7 @@ return (
 
                                                 <div className="room-price-row" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
                                                     <div style={{ textAlign: 'right' }}>
-                                                        <span style={{ fontSize: '10px', color: '#7D8880', fontWeight: '700', textTransform: 'uppercase', display: 'block' }}>Per Person</span>
+                                                        <span style={{ fontSize: '10px', color: '#5F6B63', fontWeight: '700', textTransform: 'uppercase', display: 'block' }}>Per Person</span>
                                                         <span style={{ fontFamily: 'var(--font-heading)', fontSize: '20px', fontWeight: '900', color: '#121613', whiteSpace: 'nowrap' }}>
                                                             ₹{(room.price || room.pricePerPerson || camp.price || 2499).toLocaleString('en-IN')}
                                                         </span>
@@ -1030,7 +1089,7 @@ return (
                                 {/* Header / Per-Camper Pricing Display */}
                                 <div style={{ borderBottom: '1px solid rgba(18, 22, 19, 0.08)', paddingBottom: '16px', marginBottom: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                                     <div>
-                                        <div style={{ fontSize: '11px', color: '#7D8880', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Starts at</div>
+                                        <div style={{ fontSize: '11px', color: '#5F6B63', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Starts at</div>
                                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
                                             <span style={{ fontFamily: 'var(--font-heading)', fontSize: '28px', fontWeight: '900', color: '#121613' }}>
                                                 ₹{roomPrice.toLocaleString('en-IN')}
@@ -1054,9 +1113,14 @@ return (
                                         </label>
                                         <CustomDateBatchPicker
                                             value={selectedDate}
-                                            onChange={setSelectedDate}
+                                            onChange={changeDate}
                                             label="Select Batch Date"
                                         />
+                                        {tripFromSearch?.label && selectedDate === tripFromSearch.label ? (
+                                            <p style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: '8px 0 0', fontSize: '12.5px', fontWeight: '700', color: '#2F5D50' }}>
+                                                <Check size={14} strokeWidth={3} /> Dates{tripFromSearch.guests ? ' and guests' : ''} from your search — change them anytime
+                                            </p>
+                                        ) : null}
                                     </div>
 
                                     {/* 2. Room Type Selector */}
@@ -1065,6 +1129,7 @@ return (
                                             2. Accommodation Style
                                         </label>
                                         <CustomSelectDropdown
+                                            ariaLabel="Accommodation style"
                                             value={selectedRoomId}
                                             onChange={(val) => { setSelectedRoomId(val); setCustomUnits(null); }}
                                             options={availableRooms.map(r => ({
@@ -1088,11 +1153,7 @@ return (
                                         <div style={{ display: 'flex', alignItems: 'center', background: '#F8F9F5', borderRadius: '14px', border: '1px solid rgba(18, 22, 19, 0.1)', padding: '5px 8px' }}>
                                             <button
                                                 type="button"
-                                                onClick={() => {
-                                                    const next = Math.max(1, guestsCount - 1);
-                                                    setGuestsCount(next);
-                                                    setCustomUnits(null);
-                                                }}
+                                                onClick={() => changeGuests(Math.max(1, guestsCount - 1))}
                                                 style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#FFFFFF', border: '1px solid rgba(18,22,19,0.1)', color: '#121613', fontSize: '18px', fontWeight: '800', cursor: 'pointer' }}
                                             >
                                                 −
@@ -1102,11 +1163,7 @@ return (
                                             </div>
                                             <button
                                                 type="button"
-                                                onClick={() => {
-                                                    const next = guestsCount + 1;
-                                                    setGuestsCount(next);
-                                                    setCustomUnits(null);
-                                                }}
+                                                onClick={() => changeGuests(guestsCount + 1)}
                                                 style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#FFFFFF', border: '1px solid rgba(18,22,19,0.1)', color: '#121613', fontSize: '18px', fontWeight: '800', cursor: 'pointer' }}
                                             >
                                                 +
@@ -1343,6 +1400,11 @@ Hi Aanandham! I have questions regarding availability and squad booking for this
                     </div>
                 </section>
 
+                {/* ── REVIEWS · LOCATION · NEARBY (design-system sections) ── */}
+                <div className="ah-container" style={{ marginTop: '100px' }}>
+                    <PropertyExtras camp={camp} camps={allCamps} />
+                </div>
+
                 {/* ── NEARBY OTHER CAMPSITES SECTION ── */}
                 {nearbyCamps.length > 0 && (
                     <section style={{ maxWidth: '1440px', margin: '100px auto 0', padding: '0 clamp(20px, 4vw, 48px)' }}>
@@ -1352,7 +1414,7 @@ Hi Aanandham! I have questions regarding availability and squad booking for this
                                     <span className="star-icon">★</span> SIMILAR SANCTUARIES
                                 </div>
                                 <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(24px, 3.5vw, 32px)', fontWeight: '800', margin: 0, color: '#121613' }}>
-                                    Explore Other Kerala Wilderness Camps
+                                    More stays you might like
                                 </h2>
                             </div>
                             <Link href="/camps" style={{ color: '#166534', fontWeight: '800', fontSize: '13.5px', textDecoration: 'underline' }}>
@@ -1412,7 +1474,7 @@ Hi Aanandham! I have questions regarding availability and squad booking for this
                                         </h3>
                                         <div style={{ borderTop: '1px solid rgba(18,22,19,0.06)', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
                                             <div>
-                                                <span style={{ fontSize: '10px', color: '#7D8880', display: 'block', fontWeight: '700', textTransform: 'uppercase' }}>Starts at</span>
+                                                <span style={{ fontSize: '10px', color: '#5F6B63', display: 'block', fontWeight: '700', textTransform: 'uppercase' }}>Starts at</span>
                                                 <span style={{ fontFamily: 'var(--font-heading)', fontSize: '16px', fontWeight: '900', color: '#121613' }}>₹{nc.price?.toLocaleString('en-IN') || nc.price}</span>
                                                 <span style={{ fontSize: '11px', color: '#59655D', fontWeight: '600' }}> / person</span>
                                             </div>
